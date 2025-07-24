@@ -57,7 +57,7 @@ export const Other = () => {
   });
   const [newEquipment, setNewEquipment] = useState({
     name: '',
-    quantity: 1,
+    quantity: 0,
     description: '',
   });
   const [specialEquipment, setSpecialEquipment] = useState<Equipment[]>(() => {
@@ -66,7 +66,7 @@ export const Other = () => {
   });
   const [newSpecialEquipment, setNewSpecialEquipment] = useState({
     name: '',
-    quantity: 1,
+    quantity: 0,
     description: '',
   });
   const [firearms, setFirearms] = useState<Firearm[]>(() => {
@@ -126,7 +126,7 @@ export const Other = () => {
 
   const formatNumber = (num: number | string): string => {
     const numericValue = Number(num);
-    return numericValue === 0 ? '0' : numericValue.toString().replace(/^0+/, '');
+    return numericValue.toString().replace(/^0+/, '') || '0';
   };
 
   const implantLimits: { [key: string]: number } = {
@@ -180,7 +180,7 @@ export const Other = () => {
 
   const handleAddEquipment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newEquipment.name && newEquipment.quantity > 0 && newEquipment.description) {
+    if (newEquipment.name && newEquipment.description) {
       const equip: Equipment = {
         id: crypto.randomUUID(),
         name: newEquipment.name,
@@ -188,7 +188,7 @@ export const Other = () => {
         description: newEquipment.description,
       };
       setEquipment((prev) => [...prev, equip]);
-      setNewEquipment({ name: '', quantity: 1, description: '' });
+      setNewEquipment({ name: '', quantity: 0, description: '' });
     }
   };
 
@@ -204,7 +204,7 @@ export const Other = () => {
 
   const handleAddSpecialEquipment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newSpecialEquipment.name && newSpecialEquipment.quantity > 0 && newSpecialEquipment.description) {
+    if (newSpecialEquipment.name && newSpecialEquipment.description) {
       const equip: Equipment = {
         id: crypto.randomUUID(),
         name: newSpecialEquipment.name,
@@ -212,7 +212,7 @@ export const Other = () => {
         description: newSpecialEquipment.description,
       };
       setSpecialEquipment((prev) => [...prev, equip]);
-      setNewSpecialEquipment({ name: '', quantity: 1, description: '' });
+      setNewSpecialEquipment({ name: '', quantity: 0, description: '' });
     }
   };
 
@@ -228,7 +228,7 @@ export const Other = () => {
     const setItems = isSpecial ? setSpecialEquipment : setEquipment;
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + change) } : item,
+        item.id === id ? { ...item, quantity: Math.max(0, item.quantity + change) } : item,
       ),
     );
   };
@@ -635,7 +635,7 @@ export const Other = () => {
               <input
                 type="number"
                 name="quantity"
-                min="1"
+                min="0"
                 value={formatNumber(newEquipment.quantity)}
                 onChange={handleEquipmentInputChange}
                 required
@@ -712,7 +712,7 @@ export const Other = () => {
               <input
                 type="number"
                 name="quantity"
-                min="1"
+                min="0"
                 value={formatNumber(newSpecialEquipment.quantity)}
                 onChange={handleSpecialEquipmentInputChange}
                 required
