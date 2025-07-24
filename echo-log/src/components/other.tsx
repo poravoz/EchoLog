@@ -60,6 +60,15 @@ export const Other = () => {
     quantity: 1,
     description: '',
   });
+  const [specialEquipment, setSpecialEquipment] = useState<Equipment[]>(() => {
+    const saved = localStorage.getItem('specialEquipment');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [newSpecialEquipment, setNewSpecialEquipment] = useState({
+    name: '',
+    quantity: 1,
+    description: '',
+  });
   const [firearms, setFirearms] = useState<Firearm[]>(() => {
     const saved = localStorage.getItem('firearms');
     return saved ? JSON.parse(saved) : [];
@@ -98,6 +107,10 @@ export const Other = () => {
   useEffect(() => {
     localStorage.setItem('equipment', JSON.stringify(equipment));
   }, [equipment]);
+
+  useEffect(() => {
+    localStorage.setItem('specialEquipment', JSON.stringify(specialEquipment));
+  }, [specialEquipment]);
 
   useEffect(() => {
     localStorage.setItem('firearms', JSON.stringify(firearms));
@@ -179,8 +192,45 @@ export const Other = () => {
     }
   };
 
+  const handleSpecialEquipmentInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setNewSpecialEquipment((prev) => ({
+      ...prev,
+      [name]: name === 'quantity' ? Number(formatNumber(value)) : value,
+    }));
+  };
+
+  const handleAddSpecialEquipment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newSpecialEquipment.name && newSpecialEquipment.quantity > 0 && newSpecialEquipment.description) {
+      const equip: Equipment = {
+        id: crypto.randomUUID(),
+        name: newSpecialEquipment.name,
+        quantity: Number(newSpecialEquipment.quantity),
+        description: newSpecialEquipment.description,
+      };
+      setSpecialEquipment((prev) => [...prev, equip]);
+      setNewSpecialEquipment({ name: '', quantity: 1, description: '' });
+    }
+  };
+
   const handleDeleteEquipment = (id: string) => {
     setEquipment((prev) => prev.filter((equip) => equip.id !== id));
+  };
+
+  const handleDeleteSpecialEquipment = (id: string) => {
+    setSpecialEquipment((prev) => prev.filter((equip) => equip.id !== id));
+  };
+
+  const handleQuantityChange = (id: string, change: number, isSpecial: boolean) => {
+    const setItems = isSpecial ? setSpecialEquipment : setEquipment;
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + change) } : item,
+      ),
+    );
   };
 
   const handleFirearmInputChange = (
@@ -611,7 +661,23 @@ export const Other = () => {
             equipment.map((item) => (
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
-                <p>Кількість: {formatNumber(item.quantity)}</p>
+                <div className="quantity-controls">
+                  <p>Кількість: {formatNumber(item.quantity)}</p>
+                  <div className="quantity-buttons">
+                    <button
+                      className="quantity-button decrease"
+                      onClick={() => handleQuantityChange(item.id, -1, false)}
+                    >
+                      −
+                    </button>
+                    <button
+                      className="quantity-button increase"
+                      onClick={() => handleQuantityChange(item.id, 1, false)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
                 <p>{item.description}</p>
                 <button
                   className="delete-equipment-button"
@@ -626,18 +692,17 @@ export const Other = () => {
           )}
         </div>
       </div>
-
       <div className="section">
         <h2 className="section-title">Особливе спорядження</h2>
-        <form onSubmit={handleAddEquipment} className="equipment-form">
+        <form onSubmit={handleAddSpecialEquipment} className="equipment-form">
           <div className="input-group">
             <label>
               Назва особливого предмета:
               <input
                 type="text"
                 name="name"
-                value={newEquipment.name}
-                onChange={handleEquipmentInputChange}
+                value={newSpecialEquipment.name}
+                onChange={handleSpecialEquipmentInputChange}
                 placeholder="Введіть назву предмета"
                 required
               />
@@ -648,8 +713,8 @@ export const Other = () => {
                 type="number"
                 name="quantity"
                 min="1"
-                value={formatNumber(newEquipment.quantity)}
-                onChange={handleEquipmentInputChange}
+                value={formatNumber(newSpecialEquipment.quantity)}
+                onChange={handleSpecialEquipmentInputChange}
                 required
               />
             </label>
@@ -658,8 +723,8 @@ export const Other = () => {
             Опис:
             <textarea
               name="description"
-              value={newEquipment.description}
-              onChange={handleEquipmentInputChange}
+              value={newSpecialEquipment.description}
+              onChange={handleSpecialEquipmentInputChange}
               placeholder="Введіть опис предмета"
               required
             />
@@ -669,15 +734,31 @@ export const Other = () => {
           </button>
         </form>
         <div className="equipment-list">
-          {equipment.length > 0 ? (
-            equipment.map((item) => (
+          {specialEquipment.length > 0 ? (
+            specialEquipment.map((item) => (
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
-                <p>Кількість: {formatNumber(item.quantity)}</p>
+                <div className="quantity-controls">
+                  <p>Кількість: {formatNumber(item.quantity)}</p>
+                  <div className="quantity-buttons">
+                    <button
+                      className="quantity-button decrease"
+                      onClick={() => handleQuantityChange(item.id, -1, true)}
+                    >
+                      −
+                    </button>
+                    <button
+                      className="quantity-button increase"
+                      onClick={() => handleQuantityChange(item.id, 1, true)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
                 <p>{item.description}</p>
                 <button
                   className="delete-equipment-button"
-                  onClick={() => handleDeleteEquipment(item.id)}
+                  onClick={() => handleDeleteSpecialEquipment(item.id)}
                 >
                   Видалити
                 </button>
