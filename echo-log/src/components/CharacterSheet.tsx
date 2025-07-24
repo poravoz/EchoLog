@@ -12,27 +12,20 @@ type Stats = {
   charisma: number;
 };
 
-type SkillProficiency = 0 | 1; // 0 - not proficient, 1 - proficient (only for saving throws)
-type RegularSkillProficiency = 0 | 1 | 2; // 0 - none, 1 - proficient, 2 - expert
+type SkillProficiency = 0 | 1;
+type RegularSkillProficiency = 0 | 1 | 2;
 
 type Skills = {
-  // Strength
-  strengthCheck: 0; // Always 0 - cannot be changed
+  strengthCheck: 0;
   strengthSave: SkillProficiency;
   athletics: RegularSkillProficiency;
-  
-  // Dexterity
   dexterityCheck: 0;
   dexteritySave: SkillProficiency;
   acrobatics: RegularSkillProficiency;
   sleightOfHand: RegularSkillProficiency;
   stealth: RegularSkillProficiency;
-  
-  // Constitution
   constitutionCheck: 0;
   constitutionSave: SkillProficiency;
-  
-  // Intelligence
   intelligenceCheck: 0;
   intelligenceSave: SkillProficiency;
   investigation: RegularSkillProficiency;
@@ -40,8 +33,6 @@ type Skills = {
   hacking: RegularSkillProficiency;
   streetwise: RegularSkillProficiency;
   religion: RegularSkillProficiency;
-  
-  // Reaction
   reactionCheck: 0;
   reactionSave: SkillProficiency;
   perception: RegularSkillProficiency;
@@ -49,8 +40,6 @@ type Skills = {
   medicine: RegularSkillProficiency;
   insight: RegularSkillProficiency;
   driving: RegularSkillProficiency;
-  
-  // Charisma
   charismaCheck: 0;
   charismaSave: SkillProficiency;
   performance: RegularSkillProficiency;
@@ -162,7 +151,7 @@ const getStored = <T,>(key: string, defaultValue: T): T => {
 
 const CharacterSheet: React.FC = () => {
   const [stats, setStats] = useState<Stats>(() =>
-    getStored<Stats>("stats", {
+    getStored("stats", {
       strength: 10,
       dexterity: 10,
       constitution: 10,
@@ -173,24 +162,17 @@ const CharacterSheet: React.FC = () => {
   );
 
   const [skills, setSkills] = useState<Skills>(() =>
-    getStored<Skills>("skills", {
-      // Strength
+    getStored("skills", {
       strengthCheck: 0,
       strengthSave: 0,
       athletics: 0,
-      
-      // Dexterity
       dexterityCheck: 0,
       dexteritySave: 0,
       acrobatics: 0,
       sleightOfHand: 0,
       stealth: 0,
-      
-      // Constitution
       constitutionCheck: 0,
       constitutionSave: 0,
-      
-      // Intelligence
       intelligenceCheck: 0,
       intelligenceSave: 0,
       investigation: 0,
@@ -198,8 +180,6 @@ const CharacterSheet: React.FC = () => {
       hacking: 0,
       streetwise: 0,
       religion: 0,
-      
-      // Reaction
       reactionCheck: 0,
       reactionSave: 0,
       perception: 0,
@@ -207,8 +187,6 @@ const CharacterSheet: React.FC = () => {
       medicine: 0,
       insight: 0,
       driving: 0,
-      
-      // Charisma
       charismaCheck: 0,
       charismaSave: 0,
       performance: 0,
@@ -224,10 +202,10 @@ const CharacterSheet: React.FC = () => {
   const [role, setRole] = useState(() => getStored("role", "Корпорат"));
   const [level, setLevel] = useState(() => getStored("level", 1));
   const [image, setImage] = useState(() => getStored("image", ""));
-
   const [armor, setArmor] = useState(() => getStored("armor", ""));
   const [speed, setSpeed] = useState(() => getStored("speed", ""));
   const [proficiencyBonus, setProficiencyBonus] = useState(() => getStored("proficiencyBonus", 2));
+  const [hpChange, setHpChange] = useState("");
 
   useEffect(() => {
     localStorage.setItem("stats", JSON.stringify(stats));
@@ -244,7 +222,7 @@ const CharacterSheet: React.FC = () => {
   }, [stats, skills, humanity, hp, name, role, level, image, armor, speed, proficiencyBonus]);
 
   const handleStatChange = (key: keyof Stats, value: string) => {
-    const intValue = parseInt(value) || 0;
+    const intValue = Math.min(30, Math.max(0, parseInt(value) || 0));
     setStats((prev: Stats) => ({ ...prev, [key]: intValue }));
   };
 
@@ -273,18 +251,16 @@ const CharacterSheet: React.FC = () => {
     setImage("");
   };
 
-  const toggleSkillProficiency = (skillKey: keyof Skills, skillType: "check" | "save" | "skill") => {
-    if (skillType === "check") return; // Checks cannot be modified
+  const toggleSkillProficiency = (skillKey: keyof Skills, skillType: SkillType) => {
+    if (skillType === "check") return;
     
     setSkills(prev => {
       const current = prev[skillKey];
       let next: SkillProficiency | RegularSkillProficiency;
       
       if (skillType === "save") {
-        // For saving throws, toggle between 0 and 1
         next = (current === 0 ? 1 : 0) as SkillProficiency;
       } else {
-        // For regular skills, cycle through 0, 1, 2
         next = ((current + 1) % 3) as RegularSkillProficiency;
       }
       
@@ -295,12 +271,11 @@ const CharacterSheet: React.FC = () => {
   const calculateSkillBonus = (
     ability: keyof Stats, 
     skillKey: keyof Skills, 
-    skillType: "check" | "save" | "skill"
+    skillType: SkillType
   ): string => {
     const modifier = getModifier(stats[ability]);
     
     if (skillType === "check") {
-      // Checks always use just the ability modifier
       return `${modifier >= 0 ? '+' : ''}${modifier}`;
     }
     
@@ -313,15 +288,14 @@ const CharacterSheet: React.FC = () => {
 
   const getProficiencyIcon = (
     proficiency: number, 
-    skillType: "check" | "save" | "skill"
+    skillType: SkillType
   ): string => {
-    if (skillType === "check") return ''; // No icon for checks
+    if (skillType === "check") return '';
     
     if (skillType === "save") {
       return proficiency === 1 ? '✓' : '○';
     }
     
-    // For regular skills
     switch (proficiency) {
       case 1: return '✓';
       case 2: return '✓✓';
@@ -329,19 +303,41 @@ const CharacterSheet: React.FC = () => {
     }
   };
 
-  // Calculate passive skills
   const calculatePassivePerception = () => {
-    return stats.reaction; // Passive Perception equals Reaction score
+    return stats.reaction;
   };
 
   const calculatePassiveInsight = () => {
     const insightBonus = calculateSkillBonus("reaction", "insight", "skill");
-    return 10 + parseInt(insightBonus) || 10;
+    return 10 + (parseInt(insightBonus) || 0);
   };
 
   const calculatePassiveInvestigation = () => {
     const investigationBonus = calculateSkillBonus("intelligence", "investigation", "skill");
-    return 10 + parseInt(investigationBonus) || 10;
+    return 10 + (parseInt(investigationBonus) || 0);
+  };
+
+  const handleHpModification = (isHealing: boolean) => {
+    const changeAmount = parseInt(hpChange) || 0;
+    if (changeAmount <= 0) return;
+
+    const currentHp = parseInt(hp.current) || 0;
+    const maxHp = parseInt(hp.max) || 0;
+    
+    let newHp: number;
+    if (isHealing) {
+      newHp = Math.min(currentHp + changeAmount, maxHp);
+    } else {
+      newHp = Math.max(currentHp - changeAmount, 0);
+    }
+    
+    setHp(prev => ({ ...prev, current: newHp.toString() }));
+    setHpChange("");
+  };
+
+  const formatValue = (value: string): string => {
+    const num = parseInt(value) || 0;
+    return num.toString(); // Removes leading zeros
   };
 
   return (
@@ -419,7 +415,7 @@ const CharacterSheet: React.FC = () => {
               type="number"
               value={proficiencyBonus}
               onChange={e => setProficiencyBonus(parseInt(e.target.value) || 0)}
-              placeholder="Бонус майстерності"
+              placeholder="0"
               style={{ width: 60 }}
             />
           </label>
@@ -435,14 +431,14 @@ const CharacterSheet: React.FC = () => {
                 type="text"
                 value={humanity.current}
                 onChange={e => handleDualInputChange("humanity", "current", e.target.value)}
-                placeholder="Поточна"
+                placeholder="0"
               />
               /
               <input
                 type="text"
                 value={humanity.max}
                 onChange={e => handleDualInputChange("humanity", "max", e.target.value)}
-                placeholder="Макс."
+                placeholder="0"
               />
             </div>
           </label>
@@ -455,17 +451,28 @@ const CharacterSheet: React.FC = () => {
                 type="text"
                 value={hp.current}
                 onChange={e => handleDualInputChange("hp", "current", e.target.value)}
-                placeholder="Поточні"
+                placeholder="0"
               />
               /
               <input
                 type="text"
                 value={hp.max}
                 onChange={e => handleDualInputChange("hp", "max", e.target.value)}
-                placeholder="Макс."
+                placeholder="0"
               />
             </div>
           </label>
+          <div className="hp-modifier">
+            <input
+              type="number"
+              value={hpChange}
+              onChange={e => setHpChange(e.target.value)}
+              placeholder="Кількість"
+              style={{ width: 80 }}
+            />
+            <button onClick={() => handleHpModification(false)}>Урон</button>
+            <button onClick={() => handleHpModification(true)}>Хіл</button>
+          </div>
         </div>
       </div>
 
@@ -477,8 +484,14 @@ const CharacterSheet: React.FC = () => {
               <div>{label}</div>
               <input
                 type="number"
-                value={stats[key]}
+                min="0"
+                max="30"
+                value={formatValue(stats[key].toString())}
                 onChange={e => handleStatChange(key, e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleStatChange(key, newValue);
+                }}
               />
               <div className="ability-modifier">
                 {getModifier(stats[key]) >= 0 ? "+" : ""}
@@ -499,20 +512,20 @@ const CharacterSheet: React.FC = () => {
                 {group.skills.map(skill => (
                   <div 
                     key={skill.key}
-                    onClick={() => skill.type !== "check" && toggleSkillProficiency(skill.key as keyof Skills, skill.type)}
+                    onClick={() => toggleSkillProficiency(skill.key, skill.type)}
                     className={`skill ${skill.type === "check" ? "skill-check" : ""}`}
                   >
                     <div className="skill-name">{skill.label}</div>
                     <div className="skill-bonus">
                       {calculateSkillBonus(
-                        group.ability as keyof Stats, 
-                        skill.key as keyof Skills, 
+                        group.ability, 
+                        skill.key, 
                         skill.type
                       )}
                     </div>
                     <div className="skill-proficiency">
                       {getProficiencyIcon(
-                        skills[skill.key as keyof Skills], 
+                        skills[skill.key],
                         skill.type
                       )}
                     </div>
