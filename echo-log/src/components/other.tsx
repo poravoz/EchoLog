@@ -291,7 +291,7 @@ export const Other = () => {
         Назад
       </button>
       <div className="section">
-        <h2 className="section-title">Слоти оперативної пам’яті</h2>
+        <h2 className="section-title">Слоти оперативної пам’яті/ або щось, що вам хотілось би відслідковувати</h2>
         <div className="spell-slots-container">
           {spellSlots.map((slot) => (
             <div key={slot.level} className="spell-slot-level">
