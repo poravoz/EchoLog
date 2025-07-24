@@ -1,5 +1,5 @@
 import "./CharacterSheet.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBagIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
 
@@ -147,20 +147,37 @@ const skillGroups: {
 const statusEffects = [
   "-",
   "Несвідомий",
-  "Зляканий",
-  "Невидимий",
-  "Недієздатний",
-  "Оглухлий",
-  "Скам'янілий",
-  "Оплутаний",
-  "Засліплений",
-  "Отруєний",
-  "Зачарований",
-  "Приголомшений",
-  "Паралізований",
-  "Збитий з ніг",
-  "Схоплений"
+  "Психозлам",
+  "Оптичне маскування",
+  "Система не відповідає",
+  "Аудіочіп вимкнено",
+  "Цифрова ізоляція",
+  "Плутанина сигналів",
+  "Оптика засліплена",
+  "Нейротоксин",
+  "Взлом",
+  "Сенсорна перевантаженість",
+  "Нервовий параліч",
+  "Системна втрата рівноваги",
+  "Захоплення нейролінку"
 ];
+
+const statusDescriptions: { [key: string]: string } = {
+  "Несвідомий": "Ви отримуєте стан «Недієздатний» і «Скинутий» (на землі), кидаєте все, що тримали. Швидкість 0, автоматично провалюєте рятунки Сили й Спритності. Усі атаки впритул — критичні. Ви не усвідомлюєте оточення.",
+  "Психозлам": "Ви маєте заваду на атаки та перевірки, поки бачите джерело страху, і не можете добровільно наближатися до нього.",
+  "Оптичне маскування": "Ви отримуєте перевагу на ініціативу. Вас не видно, якщо противник не має спеціальних сенсорів. Усі атаки по вас — із завадою, ваші атаки — з перевагою, поки вас не виявлять.",
+  "Система не відповідає": "Ви не можете використовувати дії або реакції, втрачаєте концентрацію, мову, і маєте заваду на ініціативу.",
+  "Аудіочіп вимкнено": "Ви нічого не чуєте і провалюєте всі перевірки, пов’язані зі слухом.",
+  "Цифрова ізоляція": "Ви перетворені в неживу матерію (як камінь або метал). Вага збільшується в 10 разів. Швидкість 0. Автоматичні провали рятунків Сили й Спритності. Стійкість до всього урону, імунітет до отруєння.",
+  "Плутанина сигналів": "Швидкість 0. Перевага до атак по вас, заваду на ваші атаки. Ви маєте заваду на рятунки Спритності.",
+  "Оптика засліплена": "Ви нічого не бачите, автоматично провалюєте перевірки, пов’язані із зором. По вас — перевага, від вас — завада.",
+  "Нейротоксин": "Ви маєте заваду на всі перевірки характеристик і атаки.",
+  "Взлом": "Ви не можете атакувати того, хто вас зламав, або навмисне йому шкодити. Він має перевагу в соціальних взаємодіях з вами.",
+  "Сенсорна перевантаженість": "Ви недієздатні, швидкість 0, автоматично провалюєте рятунки Сили й Спритності, по вас — перевага на атаки.",
+  "Нервовий параліч": "Ви недієздатні, швидкість 0, автоматично провалюєте рятунки Сили й Спритності. Якщо ворог поруч — усі його влучання стають критами.",
+  "Системна втрата рівноваги": "Ви лежите на землі, можете пересуватися лише повзком. Щоб встати — витрачаєте половину швидкості. По вас (у ближньому бою) — перевага, від вас — завада.",
+  "Захоплення нейролінку": "Ваша швидкість 0, ви не можете її збільшити. Якщо вас тягнуть — переміщення кривдника уповільнюється вдвічі."
+};
 
 const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
@@ -237,6 +254,8 @@ const CharacterSheet: React.FC = () => {
   const [deathSaves, setDeathSaves] = useState(() => getStored("deathSaves", { successes: [false, false, false], failures: [false, false, false] }));
   const [isDeathSavesActive, setIsDeathSavesActive] = useState(() => parseInt(getStored("hp", { max: "", current: "" }).current) === 0);
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusSelectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     localStorage.setItem("stats", JSON.stringify(stats));
@@ -264,6 +283,18 @@ const CharacterSheet: React.FC = () => {
       setIsDeathSavesActive(true);
     }
   }, [hp.current]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusSelectRef.current && !statusSelectRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleStatChange = (key: keyof Stats, value: string) => {
     const intValue = Math.min(30, Math.max(0, parseInt(value) || 0));
@@ -307,6 +338,7 @@ const CharacterSheet: React.FC = () => {
 
   const handleStatusChange = (value: string) => {
     setStatus(value);
+    setIsStatusDropdownOpen(true);
   };
 
   const handleMoneyChange = (value: string) => {
@@ -799,15 +831,34 @@ const CharacterSheet: React.FC = () => {
           </div>
         </div>
         <div className="status-effects-group">
-          <div className="status-input">
+          <div className="status-input relative">
             <label>
               Статус:
-              <select value={status} onChange={e => handleStatusChange(e.target.value)}>
+              <select
+                ref={statusSelectRef}
+                value={status}
+                onChange={e => handleStatusChange(e.target.value)}
+                onFocus={() => setIsStatusDropdownOpen(true)}
+              >
                 {statusEffects.map(effect => (
                   <option key={effect} value={effect}>{effect}</option>
                 ))}
               </select>
             </label>
+            {isStatusDropdownOpen && status !== "-" && (
+              <div className="status-dropdown">
+                <div className="status-dropdown-header">
+                  <h4>{status}</h4>
+                  <button
+                    onClick={() => setIsStatusDropdownOpen(false)}
+                    className="status-dropdown-close"
+                  >
+                    ×
+                  </button>
+                </div>
+                <p>{statusDescriptions[status]}</p>
+              </div>
+            )}
           </div>
           <div className="exhaustion-input">
             <label>
