@@ -28,10 +28,10 @@
 
 .avatar-container {
   display: flex;
-  justify-content: center; /* Center the avatar horizontally */
+  justify-content: center;
   align-items: center;
-  flex-direction: column; /* Stack children vertically */
-  gap: 15px; /* Reduced gap for better spacing */
+  flex-direction: column;
+  gap: 15px;
   margin-bottom: 20px;
   padding: 15px;
   background-color: #2a2a2a;
@@ -93,21 +93,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  text-align: center; /* Center the button text */
-}
-
-.avatar-controls input[type="file"] {
-  padding: 8px 12px;
-  background-color: #333;
-  color: #e0e0e0;
-  border: 1px solid #444;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.avatar-controls input[type="file"]:hover {
-  background-color: #3a3a3a;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .avatar-controls button {
@@ -124,6 +112,38 @@
 .avatar-controls button:hover {
   background-color: #81c784;
   transform: translateY(-2px);
+}
+
+.backpack-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.backpack-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: #4fc3f7;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s, transform 0.2s;
+  margin-bottom: 15px;
+}
+
+.backpack-button:hover {
+  background-color: #81c784;
+  transform: translateY(-2px);
+}
+
+.backpack-icon {
+  width: 20px;
+  height: 20px;
+  color: #1a1a1a;
 }
 
 .input-group {
@@ -160,7 +180,6 @@
   background-color: #3a3a3a;
 }
 
-/* Remove arrows from number inputs */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -207,14 +226,54 @@ input[type="number"] {
   border-color: #4fc3f7;
 }
 
-.hp-modifier {
+.single-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #1f1f1f;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+}
+
+.single-input input {
+  width: 100px;
+  padding: 8px;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.single-input input::placeholder {
+  color: #888;
+}
+
+.single-input input:focus {
+  outline: none;
+  border-color: #4fc3f7;
+}
+
+.single-input .currency-symbol {
+  color: #f0f0f0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.hp-modifier,
+.money-modifier,
+.temp-hp-modifier {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
 }
 
-.hp-modifier input {
+.hp-modifier input,
+.money-modifier input,
+.temp-hp-modifier input {
   width: 80px;
   padding: 8px;
   background-color: #333;
@@ -222,38 +281,95 @@ input[type="number"] {
   border: 1px solid #555;
   border-radius: 4px;
   text-align: center;
+  font-size: 14px;
 }
 
-.hp-modifier input:focus {
+.hp-modifier input:focus,
+.money-modifier input:focus,
+.temp-hp-modifier input:focus {
   outline: none;
   border-color: #4fc3f7;
 }
 
-.hp-modifier button {
+.hp-modifier button,
+.money-modifier button,
+.temp-hp-modifier button {
   padding: 8px 15px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
-.hp-modifier button:first-of-type {
+.hp-modifier button:first-of-type,
+.money-modifier button:first-of-type {
   background-color: #ef5350;
   color: #fff;
 }
 
-.hp-modifier button:first-of-type:hover {
+.hp-modifier button:first-of-type:hover,
+.money-modifier button:first-of-type:hover {
   background-color: #e53935;
+  transform: translateY(-2px);
 }
 
-.hp-modifier button:last-of-type {
+.hp-modifier button:last-of-type,
+.money-modifier button:last-of-type,
+.temp-hp-modifier button {
   background-color: #81c784;
   color: #1a1a1a;
 }
 
-.hp-modifier button:last-of-type:hover {
+.hp-modifier button:last-of-type:hover,
+.money-modifier button:last-of-type:hover,
+.temp-hp-modifier button:hover {
   background-color: #66bb6a;
+  transform: translateY(-2px);
+}
+
+.status-effects-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.status-effects-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  color: #f0f0f0;
+}
+
+.heroic-inspiration input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #4fc3f7;
+  cursor: pointer;
+}
+
+.heroic-inspiration input[type="checkbox"]:hover {
+  accent-color: #81c784;
+}
+
+.exhaustion-input select,
+.status-input select {
+  width: 120px;
+  padding: 8px;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.exhaustion-input select:focus,
+.status-input select:focus {
+  outline: none;
+  border-color: #4fc3f7;
+  background-color: #3a3a3a;
 }
 
 .abilities-grid {
@@ -297,7 +413,6 @@ input[type="number"] {
   font-size: 1.1em;
 }
 
-/* Remove ability buttons completely */
 .ability-buttons {
   display: none;
 }
@@ -415,12 +530,16 @@ input[type="number"] {
 }
 
 .humanity-input,
-.hp-input {
-  margin-bottom: 15px;
+.hp-input,
+.temp-hp-input,
+.money-input {
+  margin-bottom: 20px;
 }
 
 .humanity-input label,
-.hp-input label {
+.hp-input label,
+.temp-hp-input label,
+.money-input label {
   color: #f0f0f0;
   font-weight: bold;
   display: block;

@@ -1,0 +1,333 @@
+.character-sheet {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  .back-button {
+    padding: 8px 15px;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    margin-bottom: 20px;
+    align-self: flex-start;
+  }
+  
+  .back-button:hover {
+    background-color: #81c784;
+    transform: translateY(-2px);
+  }
+  
+  .section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .section-title {
+    margin: 0 0 15px;
+    color: #f0f0f0;
+    border-bottom: 2px solid #4fc3f7;
+    padding-bottom: 8px;
+    font-size: 1.5em;
+    letter-spacing: 1px;
+  }
+  
+  .spell-slots-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  
+  .spell-slot-level {
+    padding: 10px;
+    background-color: #333;
+    border-radius: 5px;
+    border: 1px solid #444;
+  }
+  
+  .spell-slot-level label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    color: #f0f0f0;
+    margin-bottom: 10px;
+  }
+  
+  .slot-input {
+    width: 60px;
+    padding: 8px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    text-align: center;
+  }
+  
+  .slot-input:focus {
+    outline: none;
+    border-color: #4fc3f7;
+    background-color: #3a3a3a;
+  }
+  
+  .slot-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .slot-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #e0e0e0;
+  }
+  
+  .slot-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4fc3f7;
+    cursor: pointer;
+  }
+  
+  .slot-checkbox-label input[type="checkbox"]:hover {
+    accent-color: #81c784;
+  }
+  
+  .spell-form,
+  .equipment-form,
+  .firearm-form,
+  .implant-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .input-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 150px;
+    font-weight: 500;
+    color: #f0f0f0;
+  }
+  
+  .input-group input,
+  .input-group select {
+    padding: 8px 12px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+  
+  .input-group input:focus,
+  .input-group select:focus {
+    outline: none;
+    border-color: #4fc3f7;
+    background-color: #3a3a3a;
+  }
+  
+  .input-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4fc3f7;
+    cursor: pointer;
+  }
+  
+  .input-group input[type="checkbox"]:hover {
+    accent-color: #81c784;
+  }
+  
+  .description-label {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .description-label textarea {
+    padding: 8px 12px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    min-height: 100px;
+    max-height: 150px;
+    resize: none;
+    overflow-y: auto;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+  
+  .description-label textarea:focus {
+    outline: none;
+    border-color: #4fc3f7;
+    background-color: #3a3a3a;
+  }
+  
+  .add-spell-button,
+  .add-equipment-button,
+  .add-firearm-button,
+  .add-implant-button {
+    padding: 8px 15px;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    align-self: flex-start;
+  }
+  
+  .add-spell-button:hover,
+  .add-equipment-button:hover,
+  .add-firearm-button:hover,
+  .add-implant-button:hover {
+    background-color: #81c784;
+    transform: translateY(-2px);
+  }
+  
+  .spells-list,
+  .equipment-list,
+  .firearms-list,
+  .implants-list {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  
+  .spell-card,
+  .equipment-card,
+  .firearm-card,
+  .implant-card {
+    padding: 15px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .spell-card h3,
+  .equipment-card h3,
+  .firearm-card h3,
+  .implant-card h4 {
+    margin: 0 0 10px;
+    color: #f0f0f0;
+    font-size: 1.2em;
+  }
+  
+  .spell-card p,
+  .equipment-card p,
+  .firearm-card p,
+  .implant-card p {
+    margin: 5px 0;
+    color: #e0e0e0;
+    font-size: 0.9em;
+  }
+  
+  .delete-spell-button,
+  .delete-equipment-button,
+  .delete-firearm-button,
+  .delete-implant-button {
+    padding: 6px 12px;
+    background-color: #ef5350;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    margin-top: 10px;
+  }
+  
+  .delete-spell-button:hover,
+  .delete-equipment-button:hover,
+  .delete-firearm-button:hover,
+  .delete-implant-button:hover {
+    background-color: #e53935;
+    transform: translateY(-2px);
+  }
+  
+  .ammo-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .ammo-controls p {
+    margin: 0;
+    font-weight: 500;
+  }
+  
+  .ammo-buttons {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .ammo-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    font-size: 14px;
+  }
+  
+  .ammo-button.decrease {
+    background-color: #ef5350;
+    color: #fff;
+  }
+  
+  .ammo-button.decrease:hover {
+    background-color: #e53935;
+    transform: translateY(-2px);
+  }
+  
+  .ammo-button.increase {
+    background-color: #81c784;
+    color: #1a1a1a;
+  }
+  
+  .ammo-button.increase:hover {
+    background-color: #66bb6a;
+    transform: translateY(-2px);
+  }
+  
+  .implant-category {
+    width: 100%;
+  }
+  
+  .implant-category h3 {
+    margin: 10px 0;
+    color: #f0f0f0;
+    font-size: 1.3em;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+  }

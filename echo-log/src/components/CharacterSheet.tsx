@@ -1,5 +1,7 @@
 import "./CharacterSheet.css";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ShoppingBagIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
 
 const defaultImage = "/avatar.png";
 
@@ -142,6 +144,24 @@ const skillGroups: {
   }
 ];
 
+const statusEffects = [
+  "-",
+  "Несвідомий",
+  "Зляканий",
+  "Невидимий",
+  "Недієздатний",
+  "Оглухлий",
+  "Скам'янілий",
+  "Оплутаний",
+  "Засліплений",
+  "Отруєний",
+  "Зачарований",
+  "Приголомшений",
+  "Паралізований",
+  "Збитий з ніг",
+  "Схоплений"
+];
+
 const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
 const getStored = <T,>(key: string, defaultValue: T): T => {
@@ -150,6 +170,7 @@ const getStored = <T,>(key: string, defaultValue: T): T => {
 };
 
 const CharacterSheet: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>(() =>
     getStored("stats", {
       strength: 10,
@@ -198,6 +219,10 @@ const CharacterSheet: React.FC = () => {
 
   const [humanity, setHumanity] = useState(() => getStored("humanity", { max: "", current: "" }));
   const [hp, setHp] = useState(() => getStored("hp", { max: "", current: "" }));
+  const [tempHp, setTempHp] = useState(() => getStored("tempHp", ""));
+  const [exhaustion, setExhaustion] = useState(() => getStored("exhaustion", 0));
+  const [status, setStatus] = useState(() => getStored("status", "-"));
+  const [money, setMoney] = useState(() => getStored("money", ""));
   const [name, setName] = useState(() => getStored("name", ""));
   const [role, setRole] = useState(() => getStored("role", "Корпорат"));
   const [level, setLevel] = useState(() => getStored("level", 1));
@@ -206,6 +231,9 @@ const CharacterSheet: React.FC = () => {
   const [speed, setSpeed] = useState(() => getStored("speed", ""));
   const [proficiencyBonus, setProficiencyBonus] = useState(() => getStored("proficiencyBonus", 2));
   const [hpChange, setHpChange] = useState("");
+  const [moneyChange, setMoneyChange] = useState("");
+  const [tempHpChange, setTempHpChange] = useState("");
+  const [heroicInspiration, setHeroicInspiration] = useState(() => getStored("heroicInspiration", false));
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -213,6 +241,10 @@ const CharacterSheet: React.FC = () => {
     localStorage.setItem("skills", JSON.stringify(skills));
     localStorage.setItem("humanity", JSON.stringify(humanity));
     localStorage.setItem("hp", JSON.stringify(hp));
+    localStorage.setItem("tempHp", JSON.stringify(tempHp));
+    localStorage.setItem("exhaustion", JSON.stringify(exhaustion));
+    localStorage.setItem("status", JSON.stringify(status));
+    localStorage.setItem("money", JSON.stringify(money));
     localStorage.setItem("name", JSON.stringify(name));
     localStorage.setItem("role", JSON.stringify(role));
     localStorage.setItem("level", JSON.stringify(level));
@@ -220,7 +252,8 @@ const CharacterSheet: React.FC = () => {
     localStorage.setItem("armor", JSON.stringify(armor));
     localStorage.setItem("speed", JSON.stringify(speed));
     localStorage.setItem("proficiencyBonus", JSON.stringify(proficiencyBonus));
-  }, [stats, skills, humanity, hp, name, role, level, image, armor, speed, proficiencyBonus]);
+    localStorage.setItem("heroicInspiration", JSON.stringify(heroicInspiration));
+  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, heroicInspiration]);
 
   const handleStatChange = (key: keyof Stats, value: string) => {
     const intValue = Math.min(30, Math.max(0, parseInt(value) || 0));
@@ -228,7 +261,7 @@ const CharacterSheet: React.FC = () => {
   };
 
   const handleLevelChange = (value: string) => {
-    const intValue = Math.min(20, Math.max(0, parseInt(value) || 0)); // Enforce max 20
+    const intValue = Math.min(20, Math.max(0, parseInt(value) || 0));
     setLevel(intValue);
   };
 
@@ -252,9 +285,38 @@ const CharacterSheet: React.FC = () => {
     setHp(prev => ({ ...prev, [field]: intValue.toString() }));
   };
 
+  const handleTempHpChange = (value: string) => {
+    const intValue = Math.max(0, parseInt(value) || 0);
+    setTempHp(intValue.toString());
+  };
+
+  const handleExhaustionChange = (value: string) => {
+    const intValue = Math.min(6, Math.max(0, parseInt(value) || 0));
+    setExhaustion(intValue);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+  };
+
+  const handleMoneyChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setMoney(intValue.toString());
+  };
+
   const handleHpModificationChange = (value: string) => {
     const intValue = parseInt(value) || 0;
     setHpChange(intValue.toString());
+  };
+
+  const handleMoneyModificationChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setMoneyChange(intValue.toString());
+  };
+
+  const handleTempHpModificationChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setTempHpChange(intValue.toString());
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,7 +327,7 @@ const CharacterSheet: React.FC = () => {
         setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
-      if (fileInput) fileInput.value = ""; // Reset file input
+      if (fileInput) fileInput.value = "";
     }
   };
 
@@ -275,6 +337,14 @@ const CharacterSheet: React.FC = () => {
 
   const handleRemoveImage = () => {
     setImage("");
+  };
+
+  const handleBackpackClick = () => {
+    navigate("/backpack");
+  };
+
+  const handleNotesClick = () => {
+    navigate("/notes");
   };
 
   const toggleSkillProficiency = (skillKey: keyof Skills, skillType: SkillType) => {
@@ -349,26 +419,73 @@ const CharacterSheet: React.FC = () => {
 
     const currentHp = parseInt(hp.current) || 0;
     const maxHp = parseInt(hp.max) || 0;
+    const currentTempHp = parseInt(tempHp) || 0;
     
     let newHp: number;
+    let newTempHp: number;
+
     if (isHealing) {
       newHp = Math.min(currentHp + changeAmount, maxHp);
+      newTempHp = currentTempHp;
     } else {
-      newHp = Math.max(currentHp - changeAmount, 0);
+      if (currentTempHp >= changeAmount) {
+        newTempHp = currentTempHp - changeAmount;
+        newHp = currentHp;
+      } else {
+        newTempHp = 0;
+        const remainingDamage = changeAmount - currentTempHp;
+        newHp = Math.max(currentHp - remainingDamage, 0);
+      }
     }
     
     setHp(prev => ({ ...prev, current: newHp.toString() }));
+    setTempHp(newTempHp.toString());
     setHpChange("");
+  };
+
+  const handleTempHpModification = () => {
+    const changeAmount = parseInt(tempHpChange) || 0;
+    if (changeAmount <= 0) return;
+    
+    setTempHp(changeAmount.toString());
+    setTempHpChange("");
+  };
+
+  const handleMoneyModification = (isAdding: boolean) => {
+    const changeAmount = parseInt(moneyChange) || 0;
+    if (changeAmount <= 0) return;
+
+    const currentMoney = parseInt(money) || 0;
+    
+    let newMoney: number;
+    if (isAdding) {
+      newMoney = currentMoney + changeAmount;
+    } else {
+      newMoney = Math.max(currentMoney - changeAmount, 0);
+    }
+    
+    setMoney(newMoney.toString());
+    setMoneyChange("");
   };
 
   const formatValue = (value: string): string => {
     const num = parseInt(value) || 0;
-    return num.toString(); // Removes leading zeros
+    return num.toString();
   };
 
   return (
     <div className="character-sheet">
       <div className="avatar-container">
+        <div className="backpack-container">
+          <button onClick={handleBackpackClick} className="backpack-button">
+            <ShoppingBagIcon className="backpack-icon" />
+            Рюкзак
+          </button>
+          <button onClick={handleNotesClick} className="backpack-button">
+            <DocumentTextIcon className="backpack-icon" />
+            Нотатки
+          </button>
+        </div>
         <div className="avatar-frame" onClick={handleAvatarClick}>
           <img
             src={image || defaultImage}
@@ -384,7 +501,7 @@ const CharacterSheet: React.FC = () => {
             accept="image/*"
             onChange={handleImageUpload}
             ref={ref => setFileInput(ref)}
-            style={{ display: "none" }} // Hidden file input
+            style={{ display: "none" }}
           />
         </div>
       </div>
@@ -401,10 +518,7 @@ const CharacterSheet: React.FC = () => {
           </label>
           <label style={{ marginLeft: 40 }}>
             Роль:
-            <select
-              value={role}
-              onChange={e => setRole(e.target.value)}
-            >
+            <select value={role} onChange={e => setRole(e.target.value)}>
               {roles.map(r => (
                 <option key={r} value={r}>{r}</option>
               ))}
@@ -415,7 +529,7 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               min="0"
-              max="20" // Enforce max level of 20
+              max="20"
               value={formatValue(level.toString())}
               onChange={e => handleLevelChange(e.target.value)}
               onBlur={e => {
@@ -543,6 +657,102 @@ const CharacterSheet: React.FC = () => {
             />
             <button onClick={() => handleHpModification(false)}>Урон</button>
             <button onClick={() => handleHpModification(true)}>Хіл</button>
+          </div>
+        </div>
+        <div className="temp-hp-input">
+          <label>
+            Тимч. ХП:
+            <div className="single-input">
+              <input
+                type="number"
+                value={formatValue(tempHp)}
+                onChange={e => handleTempHpChange(e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleTempHpChange(newValue);
+                }}
+                placeholder="0"
+              />
+            </div>
+          </label>
+          <div className="temp-hp-modifier">
+            <input
+              type="number"
+              value={formatValue(tempHpChange)}
+              onChange={e => handleTempHpModificationChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleTempHpModificationChange(newValue);
+              }}
+              placeholder="Кількість"
+              style={{ width: 80 }}
+            />
+            <button onClick={handleTempHpModification}>Додати</button>
+          </div>
+        </div>
+        <div className="money-input">
+          <label>
+            Гроші:
+            <div className="single-input">
+              <input
+                type="number"
+                value={formatValue(money)}
+                onChange={e => handleMoneyChange(e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleMoneyChange(newValue);
+                }}
+                placeholder="0"
+              />
+              <span className="currency-symbol">€$</span>
+            </div>
+          </label>
+          <div className="money-modifier">
+            <input
+              type="number"
+              value={formatValue(moneyChange)}
+              onChange={e => handleMoneyModificationChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleMoneyModificationChange(newValue);
+              }}
+              placeholder="Кількість"
+              style={{ width: 80 }}
+            />
+            <button onClick={() => handleMoneyModification(false)}>Відняти</button>
+            <button onClick={() => handleMoneyModification(true)}>Додати</button>
+          </div>
+        </div>
+        <div className="status-effects-group">
+          <div className="status-input">
+            <label>
+              Статус:
+              <select value={status} onChange={e => handleStatusChange(e.target.value)}>
+                {statusEffects.map(effect => (
+                  <option key={effect} value={effect}>{effect}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="exhaustion-input">
+            <label>
+              Виснаження:
+              <select value={exhaustion} onChange={e => handleExhaustionChange(e.target.value)}>
+                {[0, 1, 2, 3, 4, 5, 6].map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="heroic-inspiration">
+            <label>
+              Героїчне Натхнення:
+              <input
+                type="checkbox"
+                checked={heroicInspiration}
+                onChange={e => setHeroicInspiration(e.target.checked)}
+              />
+            </label>
           </div>
         </div>
       </div>
