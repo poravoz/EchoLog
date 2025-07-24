@@ -626,6 +626,68 @@ export const Other = () => {
           )}
         </div>
       </div>
+
+      <div className="section">
+        <h2 className="section-title">Особливе спорядження</h2>
+        <form onSubmit={handleAddEquipment} className="equipment-form">
+          <div className="input-group">
+            <label>
+              Назва особливого предмета:
+              <input
+                type="text"
+                name="name"
+                value={newEquipment.name}
+                onChange={handleEquipmentInputChange}
+                placeholder="Введіть назву предмета"
+                required
+              />
+            </label>
+            <label>
+              Кількість:
+              <input
+                type="number"
+                name="quantity"
+                min="1"
+                value={formatNumber(newEquipment.quantity)}
+                onChange={handleEquipmentInputChange}
+                required
+              />
+            </label>
+          </div>
+          <label className="description-label">
+            Опис:
+            <textarea
+              name="description"
+              value={newEquipment.description}
+              onChange={handleEquipmentInputChange}
+              placeholder="Введіть опис предмета"
+              required
+            />
+          </label>
+          <button type="submit" className="add-equipment-button">
+            Додати особливе спорядження
+          </button>
+        </form>
+        <div className="equipment-list">
+          {equipment.length > 0 ? (
+            equipment.map((item) => (
+              <div key={item.id} className="equipment-card">
+                <h3>{item.name}</h3>
+                <p>Кількість: {formatNumber(item.quantity)}</p>
+                <p>{item.description}</p>
+                <button
+                  className="delete-equipment-button"
+                  onClick={() => handleDeleteEquipment(item.id)}
+                >
+                  Видалити
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>Особливе спорядження ще не додане.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
