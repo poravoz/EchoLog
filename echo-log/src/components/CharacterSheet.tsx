@@ -206,6 +206,7 @@ const CharacterSheet: React.FC = () => {
   const [speed, setSpeed] = useState(() => getStored("speed", ""));
   const [proficiencyBonus, setProficiencyBonus] = useState(() => getStored("proficiencyBonus", 2));
   const [hpChange, setHpChange] = useState("");
+  const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem("stats", JSON.stringify(stats));
@@ -226,14 +227,34 @@ const CharacterSheet: React.FC = () => {
     setStats((prev: Stats) => ({ ...prev, [key]: intValue }));
   };
 
-  const handleDualInputChange = (
-    type: "humanity" | "hp",
-    field: "max" | "current",
-    value: string
-  ) => {
-    const setter = type === "humanity" ? setHumanity : setHp;
-    const state = type === "humanity" ? humanity : hp;
-    setter({ ...state, [field]: value });
+  const handleLevelChange = (value: string) => {
+    const intValue = Math.min(20, Math.max(0, parseInt(value) || 0)); // Enforce max 20
+    setLevel(intValue);
+  };
+
+  const handleArmorChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setArmor(intValue.toString());
+  };
+
+  const handleSpeedChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setSpeed(intValue.toString());
+  };
+
+  const handleHumanityChange = (field: "max" | "current", value: string) => {
+    const intValue = parseInt(value) || 0;
+    setHumanity(prev => ({ ...prev, [field]: intValue.toString() }));
+  };
+
+  const handleHpChange = (field: "max" | "current", value: string) => {
+    const intValue = parseInt(value) || 0;
+    setHp(prev => ({ ...prev, [field]: intValue.toString() }));
+  };
+
+  const handleHpModificationChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setHpChange(intValue.toString());
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,7 +265,12 @@ const CharacterSheet: React.FC = () => {
         setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+      if (fileInput) fileInput.value = ""; // Reset file input
     }
+  };
+
+  const handleAvatarClick = () => {
+    if (fileInput) fileInput.click();
   };
 
   const handleRemoveImage = () => {
@@ -343,14 +369,23 @@ const CharacterSheet: React.FC = () => {
   return (
     <div className="character-sheet">
       <div className="avatar-container">
-        <img
-          src={image || defaultImage}
-          alt="avatar"
-          className="avatar"
-        />
+        <div className="avatar-frame" onClick={handleAvatarClick}>
+          <img
+            src={image || defaultImage}
+            alt="avatar"
+            className="avatar"
+          />
+          <div className="avatar-glow"></div>
+        </div>
         <div className="avatar-controls">
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
           {image && <button onClick={handleRemoveImage}>Видалити</button>}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            ref={ref => setFileInput(ref)}
+            style={{ display: "none" }} // Hidden file input
+          />
         </div>
       </div>
 
@@ -379,10 +414,14 @@ const CharacterSheet: React.FC = () => {
             Рівень:
             <input
               type="number"
-              min={1}
-              max={20}
-              value={level}
-              onChange={e => setLevel(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+              min="0"
+              max="20" // Enforce max level of 20
+              value={formatValue(level.toString())}
+              onChange={e => handleLevelChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleLevelChange(newValue);
+              }}
               style={{ width: 60 }}
             />
           </label>
@@ -394,18 +433,26 @@ const CharacterSheet: React.FC = () => {
           <label>
             Броня:
             <input
-              type="text"
-              value={armor}
-              onChange={e => setArmor(e.target.value)}
+              type="number"
+              value={formatValue(armor)}
+              onChange={e => handleArmorChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleArmorChange(newValue);
+              }}
               style={{ width: 60 }}
             />
           </label>
           <label style={{ marginLeft: 40 }}>
             Швидкість:
             <input
-              type="text"
-              value={speed}
-              onChange={e => setSpeed(e.target.value)}
+              type="number"
+              value={formatValue(speed)}
+              onChange={e => handleSpeedChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleSpeedChange(newValue);
+              }}
               style={{ width: 60 }}
             />
           </label>
@@ -413,8 +460,12 @@ const CharacterSheet: React.FC = () => {
             <span className="proficiency-bonus">+ </span>
             <input
               type="number"
-              value={proficiencyBonus}
+              value={formatValue(proficiencyBonus.toString())}
               onChange={e => setProficiencyBonus(parseInt(e.target.value) || 0)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                setProficiencyBonus(parseInt(newValue) || 0);
+              }}
               placeholder="0"
               style={{ width: 60 }}
             />
@@ -428,16 +479,24 @@ const CharacterSheet: React.FC = () => {
             Людяність:
             <div className="dual-input">
               <input
-                type="text"
-                value={humanity.current}
-                onChange={e => handleDualInputChange("humanity", "current", e.target.value)}
+                type="number"
+                value={formatValue(humanity.current)}
+                onChange={e => handleHumanityChange("current", e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleHumanityChange("current", newValue);
+                }}
                 placeholder="0"
               />
               /
               <input
-                type="text"
-                value={humanity.max}
-                onChange={e => handleDualInputChange("humanity", "max", e.target.value)}
+                type="number"
+                value={formatValue(humanity.max)}
+                onChange={e => handleHumanityChange("max", e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleHumanityChange("max", newValue);
+                }}
                 placeholder="0"
               />
             </div>
@@ -448,16 +507,24 @@ const CharacterSheet: React.FC = () => {
             ХП:
             <div className="dual-input">
               <input
-                type="text"
-                value={hp.current}
-                onChange={e => handleDualInputChange("hp", "current", e.target.value)}
+                type="number"
+                value={formatValue(hp.current)}
+                onChange={e => handleHpChange("current", e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleHpChange("current", newValue);
+                }}
                 placeholder="0"
               />
               /
               <input
-                type="text"
-                value={hp.max}
-                onChange={e => handleDualInputChange("hp", "max", e.target.value)}
+                type="number"
+                value={formatValue(hp.max)}
+                onChange={e => handleHpChange("max", e.target.value)}
+                onBlur={e => {
+                  const newValue = formatValue(e.target.value);
+                  handleHpChange("max", newValue);
+                }}
                 placeholder="0"
               />
             </div>
@@ -465,8 +532,12 @@ const CharacterSheet: React.FC = () => {
           <div className="hp-modifier">
             <input
               type="number"
-              value={hpChange}
-              onChange={e => setHpChange(e.target.value)}
+              value={formatValue(hpChange)}
+              onChange={e => handleHpModificationChange(e.target.value)}
+              onBlur={e => {
+                const newValue = formatValue(e.target.value);
+                handleHpModificationChange(newValue);
+              }}
               placeholder="Кількість"
               style={{ width: 80 }}
             />
