@@ -372,6 +372,56 @@ input[type="number"] {
   background-color: #3a3a3a;
 }
 
+.death-saves {
+  margin-bottom: 20px;
+}
+
+.death-saves label {
+  color: #f0f0f0;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+.death-saves-group {
+  display: flex;
+  gap: 20px;
+  pointer-events: auto;
+}
+
+.death-saves-successes,
+.death-saves-failures {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.death-saves-successes span,
+.death-saves-failures span {
+  color: #f0f0f0;
+  font-weight: bold;
+}
+
+.death-save-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: #4fc3f7;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.death-save-checkbox:checked {
+  accent-color: #81c784;
+}
+
+.death-save-checkbox:hover {
+  accent-color: #66bb6a;
+}
+
 .abilities-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

@@ -234,6 +234,8 @@ const CharacterSheet: React.FC = () => {
   const [moneyChange, setMoneyChange] = useState("");
   const [tempHpChange, setTempHpChange] = useState("");
   const [heroicInspiration, setHeroicInspiration] = useState(() => getStored("heroicInspiration", false));
+  const [deathSaves, setDeathSaves] = useState(() => getStored("deathSaves", { successes: [false, false, false], failures: [false, false, false] }));
+  const [isDeathSavesActive, setIsDeathSavesActive] = useState(() => parseInt(getStored("hp", { max: "", current: "" }).current) === 0);
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -253,7 +255,15 @@ const CharacterSheet: React.FC = () => {
     localStorage.setItem("speed", JSON.stringify(speed));
     localStorage.setItem("proficiencyBonus", JSON.stringify(proficiencyBonus));
     localStorage.setItem("heroicInspiration", JSON.stringify(heroicInspiration));
-  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, heroicInspiration]);
+    localStorage.setItem("deathSaves", JSON.stringify(deathSaves));
+  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, heroicInspiration, deathSaves]);
+
+  useEffect(() => {
+    const currentHp = parseInt(hp.current) || 0;
+    if (currentHp === 0) {
+      setIsDeathSavesActive(true);
+    }
+  }, [hp.current]);
 
   const handleStatChange = (key: keyof Stats, value: string) => {
     const intValue = Math.min(30, Math.max(0, parseInt(value) || 0));
@@ -441,6 +451,10 @@ const CharacterSheet: React.FC = () => {
     setHp(prev => ({ ...prev, current: newHp.toString() }));
     setTempHp(newTempHp.toString());
     setHpChange("");
+    if (newHp > 0) {
+      setDeathSaves({ successes: [false, false, false], failures: [false, false, false] });
+      setIsDeathSavesActive(false);
+    }
   };
 
   const handleTempHpModification = () => {
@@ -468,10 +482,34 @@ const CharacterSheet: React.FC = () => {
     setMoneyChange("");
   };
 
+  const handleDeathSaveChange = (type: 'successes' | 'failures', index: number) => {
+    setDeathSaves(prev => {
+      const newState = {
+        ...prev,
+        [type]: [...prev[type]]
+      };
+      newState[type][index] = !newState[type][index];
+      console.log(`Updated ${type} at index ${index} to ${newState[type][index]}`);
+      
+      const successCount = newState.successes.filter(Boolean).length;
+      const failureCount = newState.failures.filter(Boolean).length;
+
+      if (successCount >= 3 || failureCount >= 3) {
+        console.log(`Death saves ${successCount >= 3 ? 'succeeded' : 'failed'}, resetting death saves and hiding section`);
+        setIsDeathSavesActive(false);
+        return { successes: [false, false, false], failures: [false, false, false] };
+      }
+      
+      return newState;
+    });
+  };
+
   const formatValue = (value: string): string => {
     const num = parseInt(value) || 0;
     return num.toString();
   };
+
+  const isUnconscious = parseInt(hp.current) === 0;
 
   return (
     <div className="character-sheet">
@@ -659,6 +697,43 @@ const CharacterSheet: React.FC = () => {
             <button onClick={() => handleHpModification(true)}>Хіл</button>
           </div>
         </div>
+        {isUnconscious && isDeathSavesActive && (
+          <div className="death-saves">
+            <label>Рятівні кидки від смерті:</label>
+            <div className="death-saves-group">
+              <div className="death-saves-successes">
+                <span>Успіхи:</span>
+                {[0, 1, 2].map(index => (
+                  <input
+                    key={`success-${index}`}
+                    type="checkbox"
+                    checked={deathSaves.successes[index]}
+                    onChange={() => {
+                      console.log(`Clicked success checkbox ${index}`);
+                      handleDeathSaveChange('successes', index);
+                    }}
+                    className="death-save-checkbox"
+                  />
+                ))}
+              </div>
+              <div className="death-saves-failures">
+                <span>Провали:</span>
+                {[0, 1, 2].map(index => (
+                  <input
+                    key={`failure-${index}`}
+                    type="checkbox"
+                    checked={deathSaves.failures[index]}
+                    onChange={() => {
+                      console.log(`Clicked failure checkbox ${index}`);
+                      handleDeathSaveChange('failures', index);
+                    }}
+                    className="death-save-checkbox"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="temp-hp-input">
           <label>
             Тимч. ХП:
