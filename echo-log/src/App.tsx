@@ -2,7 +2,6 @@ import CharacterSheet from "./components/CharacterSheet";
 import { Routes, Route } from "react-router-dom";
 import { Other } from "./components/other";
 import "./index.css";
-import  Notes from "./components/Notes";
 
 function App() {
   return (
@@ -10,7 +9,6 @@ function App() {
       <Routes>
         <Route path="/" element={<CharacterSheet />} />
         <Route path="/backpack" element={<Other />} />
-        <Route path="/notes" element={<Notes />} />
       </Routes>
     </div>
   );

@@ -641,10 +641,6 @@ const CharacterSheet: React.FC = () => {
             <ShoppingBagIcon className="backpack-icon" />
             Рюкзак
           </button>
-          <button onClick={handleNotesClick} className="backpack-button">
-            <DocumentTextIcon className="backpack-icon" />
-            Нотатки
-          </button>
         </div>
         <div className="avatar-frame" onClick={handleAvatarClick}>
           <img

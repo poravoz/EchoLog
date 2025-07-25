@@ -6,9 +6,9 @@ interface Spell {
   id: string;
   name: string;
   level: number;
-  damage: string;
+  damage?: string;
   description: string;
-  type: 'damage' | 'heal';
+  type: 'damage' | 'heal' | 'none';
   bonusStat?: string;
   hitBonus?: number;
 }
@@ -58,10 +58,10 @@ export const Other = () => {
   });
   const [newSpell, setNewSpell] = useState({
     name: '',
-    level: 1,
+    level: 0,
     damage: '',
     description: '',
-    type: 'damage' as 'damage' | 'heal',
+    type: 'none' as 'damage' | 'heal' | 'none',
     bonusStat: '',
     hitBonus: 0,
   });
@@ -180,26 +180,28 @@ export const Other = () => {
     const { name, value } = e.target;
     setNewSpell((prev) => ({
       ...prev,
-      [name]: name === 'hitBonus' ? Number(formatNumber(value)) : value,
+      [name]: name === 'hitBonus' ? Number(formatNumber(value)) : 
+             name === 'level' ? Number(value) : value,
+      ...(name === 'type' && value === 'none' ? { damage: '', bonusStat: '', hitBonus: 0 } : {}),
       ...(name === 'bonusStat' && !value ? { hitBonus: 0 } : {}),
     }));
   };
 
   const handleAddSpell = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newSpell.name && newSpell.damage && newSpell.description) {
+    if (newSpell.name && newSpell.description && (newSpell.type !== 'none' ? newSpell.damage : true)) {
       const spell: Spell = {
         id: crypto.randomUUID(),
         name: newSpell.name,
         level: Number(newSpell.level),
-        damage: newSpell.damage,
+        damage: newSpell.type !== 'none' ? newSpell.damage : undefined,
         description: newSpell.description,
         type: newSpell.type,
         bonusStat: newSpell.bonusStat || undefined,
         hitBonus: newSpell.bonusStat ? Number(newSpell.hitBonus) : undefined,
       };
       setSpells((prev) => [...prev, spell]);
-      setNewSpell({ name: '', level: 1, damage: '', description: '', type: 'damage', bonusStat: '', hitBonus: 0 });
+      setNewSpell({ name: '', level: 0, damage: '', description: '', type: 'none', bonusStat: '', hitBonus: 0 });
     }
   };
 
@@ -444,7 +446,9 @@ export const Other = () => {
                       type="checkbox"
                       checked={slot.used.includes(index)}
                       onChange={() => handleSlotToggle(slot.level, index)}
+                      className="slot-checkbox"
                     />
+                    <span className="slot-checkbox-custom"></span>
                     Слот {formatNumber(index + 1)}
                   </label>
                 ))}
@@ -482,6 +486,7 @@ export const Other = () => {
             <label>
               Рівень:
               <select name="level" value={newSpell.level} onChange={handleSpellInputChange}>
+                <option value="0">0 (Замовляння)</option>
                 {[...Array(9)].map((_, i) => (
                   <option key={i + 1} value={i + 1}>
                     {formatNumber(i + 1)}
@@ -492,21 +497,24 @@ export const Other = () => {
             <label>
               Тип:
               <select name="type" value={newSpell.type} onChange={handleSpellInputChange}>
+                <option value="none">-</option>
                 <option value="damage">Урон</option>
                 <option value="heal">Хіл</option>
               </select>
             </label>
-            <label>
-              Значення:
-              <input
-                type="text"
-                name="damage"
-                value={newSpell.damage}
-                onChange={handleSpellInputChange}
-                placeholder={newSpell.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
-                required
-              />
-            </label>
+            {newSpell.type !== 'none' && (
+              <label>
+                Значення:
+                <input
+                  type="text"
+                  name="damage"
+                  value={newSpell.damage}
+                  onChange={handleSpellInputChange}
+                  placeholder={newSpell.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
+                  required
+                />
+              </label>
+            )}
             <label>
               Характеристика бонусу:
               <select name="bonusStat" value={newSpell.bonusStat} onChange={handleSpellInputChange}>
@@ -549,9 +557,11 @@ export const Other = () => {
             spells.map((spell) => (
               <div key={spell.id} className="spell-card">
                 <h3>{spell.name}</h3>
-                <p>Рівень: {formatNumber(spell.level)}</p>
-                <p>Тип: {spell.type === 'damage' ? 'Урон' : 'Хіл'}</p>
-                <p>{spell.type === 'damage' ? 'Урон' : 'Зцілення'}: {spell.damage}</p>
+                <p>Рівень: {spell.level === 0 ? '0 (Замовляння)' : formatNumber(spell.level)}</p>
+                <p>Тип: {spell.type === 'damage' ? 'Урон' : spell.type === 'heal' ? 'Хіл' : '-'}</p>
+                {spell.damage && (
+                  <p>{spell.type === 'damage' ? 'Урон' : 'Зцілення'}: {spell.damage}</p>
+                )}
                 {spell.bonusStat && <p>Характеристика бонусу: {spell.bonusStat}</p>}
                 {spell.hitBonus !== undefined && (
                   <p>Бонус на попадання: {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
