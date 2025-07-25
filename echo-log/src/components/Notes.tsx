@@ -1,23 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Notes.css";
 
-const getStored = <T,>(key: string, defaultValue: T): T => {
-  const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : defaultValue;
+interface NotesData {
+  notes: string;
+  goals: string;
+  features: string;
+}
+
+const defaultNotesData: NotesData = {
+  notes: "",
+  goals: "",
+  features: "",
 };
 
 const Notes: React.FC = () => {
   const navigate = useNavigate();
-  const [notes, setNotes] = useState(() => getStored("notes", ""));
-  const [goals, setGoals] = useState(() => getStored("goals", ""));
-  const [features, setFeatures] = useState(() => getStored("features", ""));
+  const [notes, setNotes] = useState<string>(defaultNotesData.notes);
+  const [goals, setGoals] = useState<string>(defaultNotesData.goals);
+  const [features, setFeatures] = useState<string>(defaultNotesData.features);
+  const loadFileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    localStorage.setItem("notes", JSON.stringify(notes));
-    localStorage.setItem("goals", JSON.stringify(goals));
-    localStorage.setItem("features", JSON.stringify(features));
-  }, [notes, goals, features]);
+  const saveToJson = () => {
+    const notesData: NotesData = { notes, goals, features };
+    const blob = new Blob([JSON.stringify(notesData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "notes.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const loadFromJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data: NotesData = JSON.parse(e.target?.result as string);
+          setNotes(data.notes);
+          setGoals(data.goals);
+          setFeatures(data.features);
+        } catch (error) {
+          alert("Помилка завантаження файлу JSON");
+        }
+      };
+      reader.readAsText(file);
+      if (loadFileInputRef.current) loadFileInputRef.current.value = "";
+    }
+  };
 
   const handleBackClick = () => {
     navigate("/");
@@ -25,9 +57,24 @@ const Notes: React.FC = () => {
 
   return (
     <div className="notes-sheet">
-      <button onClick={handleBackClick} className="back-button">
-        Назад
-      </button>
+      <div className="notes-controls">
+        <button onClick={handleBackClick} className="back-button">
+          Назад
+        </button>
+        <button onClick={saveToJson} className="back-button">
+          Зберегти JSON
+        </button>
+        <button onClick={() => loadFileInputRef.current?.click()} className="back-button">
+          Завантажити JSON
+        </button>
+        <input
+          type="file"
+          accept="application/json"
+          onChange={loadFromJson}
+          ref={loadFileInputRef}
+          style={{ display: "none" }}
+        />
+      </div>
       <div className="section">
         <h3 className="section-title">Нотатки</h3>
         <div className="description-label">
