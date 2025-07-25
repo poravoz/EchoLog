@@ -22,6 +22,7 @@ interface Firearm {
   id: string;
   name: string;
   damage: string;
+  hitBonus: number; // Added hit bonus field
   description: string;
   hasAmmo: boolean;
   ammo: number;
@@ -78,6 +79,7 @@ export const Other = () => {
   const [newFirearm, setNewFirearm] = useState({
     name: '',
     damage: '',
+    hitBonus: 0, // Added hit bonus field
     description: '',
     hasAmmo: false,
     ammo: 0,
@@ -243,7 +245,7 @@ export const Other = () => {
     setNewFirearm((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-             name === 'ammo' ? Number(formatNumber(value)) : value,
+             name === 'ammo' || name === 'hitBonus' ? Number(formatNumber(value)) : value,
       ...(name === 'hasAmmo' && !(e.target as HTMLInputElement).checked ? { ammo: 0 } : {}),
     }));
   };
@@ -255,12 +257,13 @@ export const Other = () => {
         id: crypto.randomUUID(),
         name: newFirearm.name,
         damage: newFirearm.damage,
+        hitBonus: Number(newFirearm.hitBonus), // Include hit bonus
         description: newFirearm.description,
         hasAmmo: newFirearm.hasAmmo,
         ammo: newFirearm.hasAmmo ? Number(newFirearm.ammo) : 0,
       };
       setFirearms((prev) => [...prev, firearm]);
-      setNewFirearm({ name: '', damage: '', description: '', hasAmmo: false, ammo: 0 });
+      setNewFirearm({ name: '', damage: '', hitBonus: 0, description: '', hasAmmo: false, ammo: 0 });
     }
   };
 
@@ -546,7 +549,7 @@ export const Other = () => {
           )}
         </div>
       </div>
-      <div className="section">
+      <div className="section firearm-section">
         <h2 className="section-title">Зброя</h2>
         <form onSubmit={handleAddFirearm} className="firearm-form">
           <div className="input-group">
@@ -569,6 +572,17 @@ export const Other = () => {
                 value={newFirearm.damage}
                 onChange={handleFirearmInputChange}
                 placeholder="Напр., 2d8 колючий"
+                required
+              />
+            </label>
+            <label>
+              Бонус на попадання: +
+              <input
+                type="number"
+                name="hitBonus"
+                value={formatNumber(newFirearm.hitBonus)}
+                onChange={handleFirearmInputChange}
+                placeholder="Напр., +2"
                 required
               />
             </label>
@@ -615,6 +629,7 @@ export const Other = () => {
               <div key={firearm.id} className="firearm-card">
                 <h3>{firearm.name}</h3>
                 <p>Урон: {firearm.damage}</p>
+                <p>Бонус на попадання: {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
                 <p>{firearm.description}</p>
                 {firearm.hasAmmo && (
                   <div className="ammo-controls">
