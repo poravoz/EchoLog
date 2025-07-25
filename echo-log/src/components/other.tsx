@@ -8,6 +8,9 @@ interface Spell {
   level: number;
   damage: string;
   description: string;
+  type: 'damage' | 'heal';
+  bonusStat?: string;
+  hitBonus?: number;
 }
 
 interface Equipment {
@@ -16,16 +19,22 @@ interface Equipment {
   quantity: number;
   description: string;
   usageType?: 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу';
+  hasType?: boolean;
+  type?: 'damage' | 'heal';
+  damage?: string;
+  hitBonus?: number;
+  bonusStat?: string;
 }
 
 interface Firearm {
   id: string;
   name: string;
   damage: string;
-  hitBonus: number; // Added hit bonus field
+  hitBonus: number;
   description: string;
   hasAmmo: boolean;
   ammo: number;
+  bonusStat?: string;
 }
 
 interface Implant {
@@ -52,6 +61,9 @@ export const Other = () => {
     level: 1,
     damage: '',
     description: '',
+    type: 'damage' as 'damage' | 'heal',
+    bonusStat: '',
+    hitBonus: 0,
   });
   const [equipment, setEquipment] = useState<Equipment[]>(() => {
     const saved = localStorage.getItem('equipment');
@@ -71,6 +83,11 @@ export const Other = () => {
     quantity: 0,
     description: '',
     usageType: 'Немає типу' as 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу',
+    hasType: false,
+    type: 'damage' as 'damage' | 'heal',
+    damage: '',
+    hitBonus: 0,
+    bonusStat: '',
   });
   const [firearms, setFirearms] = useState<Firearm[]>(() => {
     const saved = localStorage.getItem('firearms');
@@ -79,10 +96,11 @@ export const Other = () => {
   const [newFirearm, setNewFirearm] = useState({
     name: '',
     damage: '',
-    hitBonus: 0, // Added hit bonus field
+    hitBonus: 0,
     description: '',
     hasAmmo: false,
     ammo: 0,
+    bonusStat: '',
   });
   const [implants, setImplants] = useState<Implant[]>(() => {
     const saved = localStorage.getItem('implants');
@@ -146,11 +164,25 @@ export const Other = () => {
     'Ноги': 1,
   };
 
+  const statOptions = [
+    '',
+    'Сила',
+    'Спритність',
+    'Статура',
+    'Інтелект',
+    'Реакція',
+    'Харизма',
+  ];
+
   const handleSpellInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setNewSpell((prev) => ({ ...prev, [name]: value }));
+    setNewSpell((prev) => ({
+      ...prev,
+      [name]: name === 'hitBonus' ? Number(formatNumber(value)) : value,
+      ...(name === 'bonusStat' && !value ? { hitBonus: 0 } : {}),
+    }));
   };
 
   const handleAddSpell = (e: React.FormEvent) => {
@@ -162,9 +194,12 @@ export const Other = () => {
         level: Number(newSpell.level),
         damage: newSpell.damage,
         description: newSpell.description,
+        type: newSpell.type,
+        bonusStat: newSpell.bonusStat || undefined,
+        hitBonus: newSpell.bonusStat ? Number(newSpell.hitBonus) : undefined,
       };
       setSpells((prev) => [...prev, spell]);
-      setNewSpell({ name: '', level: 1, damage: '', description: '' });
+      setNewSpell({ name: '', level: 1, damage: '', description: '', type: 'damage', bonusStat: '', hitBonus: 0 });
     }
   };
 
@@ -199,10 +234,13 @@ export const Other = () => {
   const handleSpecialEquipmentInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setNewSpecialEquipment((prev) => ({
       ...prev,
-      [name]: name === 'quantity' ? Number(formatNumber(value)) : value,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+             name === 'quantity' || name === 'hitBonus' ? Number(formatNumber(value)) : value,
+      ...(name === 'hasType' && !(e.target as HTMLInputElement).checked ? { type: 'damage', damage: '', hitBonus: 0, bonusStat: '' } : {}),
+      ...(name === 'bonusStat' && !value ? { hitBonus: 0 } : {}),
     }));
   };
 
@@ -215,9 +253,24 @@ export const Other = () => {
         quantity: Number(newSpecialEquipment.quantity),
         description: newSpecialEquipment.description,
         usageType: newSpecialEquipment.usageType,
+        hasType: newSpecialEquipment.hasType,
+        type: newSpecialEquipment.hasType ? newSpecialEquipment.type : undefined,
+        damage: newSpecialEquipment.hasType ? newSpecialEquipment.damage : undefined,
+        hitBonus: newSpecialEquipment.hasType && newSpecialEquipment.bonusStat ? Number(newSpecialEquipment.hitBonus) : undefined,
+        bonusStat: newSpecialEquipment.hasType && newSpecialEquipment.bonusStat ? newSpecialEquipment.bonusStat : undefined,
       };
       setSpecialEquipment((prev) => [...prev, equip]);
-      setNewSpecialEquipment({ name: '', quantity: 0, description: '', usageType: 'Немає типу' });
+      setNewSpecialEquipment({ 
+        name: '', 
+        quantity: 0, 
+        description: '', 
+        usageType: 'Немає типу',
+        hasType: false,
+        type: 'damage',
+        damage: '',
+        hitBonus: 0,
+        bonusStat: '',
+      });
     }
   };
 
@@ -239,7 +292,7 @@ export const Other = () => {
   };
 
   const handleFirearmInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     setNewFirearm((prev) => ({
@@ -257,13 +310,14 @@ export const Other = () => {
         id: crypto.randomUUID(),
         name: newFirearm.name,
         damage: newFirearm.damage,
-        hitBonus: Number(newFirearm.hitBonus), // Include hit bonus
+        hitBonus: Number(newFirearm.hitBonus),
         description: newFirearm.description,
         hasAmmo: newFirearm.hasAmmo,
         ammo: newFirearm.hasAmmo ? Number(newFirearm.ammo) : 0,
+        bonusStat: newFirearm.bonusStat || undefined,
       };
       setFirearms((prev) => [...prev, firearm]);
-      setNewFirearm({ name: '', damage: '', hitBonus: 0, description: '', hasAmmo: false, ammo: 0 });
+      setNewFirearm({ name: '', damage: '', hitBonus: 0, description: '', hasAmmo: false, ammo: 0, bonusStat: '' });
     }
   };
 
@@ -436,16 +490,45 @@ export const Other = () => {
               </select>
             </label>
             <label>
-              Урон:
+              Тип:
+              <select name="type" value={newSpell.type} onChange={handleSpellInputChange}>
+                <option value="damage">Урон</option>
+                <option value="heal">Хіл</option>
+              </select>
+            </label>
+            <label>
+              Значення:
               <input
                 type="text"
                 name="damage"
                 value={newSpell.damage}
                 onChange={handleSpellInputChange}
-                placeholder="Напр., 2d6 вогню"
+                placeholder={newSpell.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
                 required
               />
             </label>
+            <label>
+              Характеристика бонусу:
+              <select name="bonusStat" value={newSpell.bonusStat} onChange={handleSpellInputChange}>
+                {statOptions.map((stat) => (
+                  <option key={stat || 'none'} value={stat}>
+                    {stat || '-'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {newSpell.bonusStat && (
+              <label>
+                Бонус на попадання: +
+                <input
+                  type="number"
+                  name="hitBonus"
+                  value={formatNumber(newSpell.hitBonus)}
+                  onChange={handleSpellInputChange}
+                  placeholder="Напр., +2"
+                />
+              </label>
+            )}
           </div>
           <label className="description-label">
             Опис:
@@ -467,7 +550,12 @@ export const Other = () => {
               <div key={spell.id} className="spell-card">
                 <h3>{spell.name}</h3>
                 <p>Рівень: {formatNumber(spell.level)}</p>
-                <p>Урон: {spell.damage}</p>
+                <p>Тип: {spell.type === 'damage' ? 'Урон' : 'Хіл'}</p>
+                <p>{spell.type === 'damage' ? 'Урон' : 'Зцілення'}: {spell.damage}</p>
+                {spell.bonusStat && <p>Характеристика бонусу: {spell.bonusStat}</p>}
+                {spell.hitBonus !== undefined && (
+                  <p>Бонус на попадання: {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
+                )}
                 <p>{spell.description}</p>
                 <button
                   className="delete-spell-button"
@@ -587,6 +675,16 @@ export const Other = () => {
               />
             </label>
             <label>
+              Характеристика бонусу:
+              <select name="bonusStat" value={newFirearm.bonusStat} onChange={handleFirearmInputChange}>
+                {statOptions.map((stat) => (
+                  <option key={stat || 'none'} value={stat}>
+                    {stat || '-'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               Має патрони:
               <input
                 type="checkbox"
@@ -630,6 +728,7 @@ export const Other = () => {
                 <h3>{firearm.name}</h3>
                 <p>Урон: {firearm.damage}</p>
                 <p>Бонус на попадання: {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
+                {firearm.bonusStat && <p>Характеристика бонусу: {firearm.bonusStat}</p>}
                 <p>{firearm.description}</p>
                 {firearm.hasAmmo && (
                   <div className="ammo-controls">
@@ -778,6 +877,59 @@ export const Other = () => {
                 <option value="Короткий відпочинок">Короткий відпочинок</option>
               </select>
             </label>
+            <label>
+              Має тип урон/хіл:
+              <input
+                type="checkbox"
+                name="hasType"
+                checked={newSpecialEquipment.hasType}
+                onChange={handleSpecialEquipmentInputChange}
+              />
+            </label>
+            {newSpecialEquipment.hasType && (
+              <>
+                <label>
+                  Тип:
+                  <select name="type" value={newSpecialEquipment.type} onChange={handleSpecialEquipmentInputChange}>
+                    <option value="damage">Урон</option>
+                    <option value="heal">Хіл</option>
+                  </select>
+                </label>
+                <label>
+                  Значення:
+                  <input
+                    type="text"
+                    name="damage"
+                    value={newSpecialEquipment.damage}
+                    onChange={handleSpecialEquipmentInputChange}
+                    placeholder={newSpecialEquipment.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
+                    required
+                  />
+                </label>
+                <label>
+                  Характеристика бонусу:
+                  <select name="bonusStat" value={newSpecialEquipment.bonusStat} onChange={handleSpecialEquipmentInputChange}>
+                    {statOptions.map((stat) => (
+                      <option key={stat || 'none'} value={stat}>
+                        {stat || '-'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {newSpecialEquipment.bonusStat && (
+                  <label>
+                    Бонус на попадання: +
+                    <input
+                      type="number"
+                      name="hitBonus"
+                      value={formatNumber(newSpecialEquipment.hitBonus)}
+                      onChange={handleSpecialEquipmentInputChange}
+                      placeholder="Напр., +2"
+                    />
+                  </label>
+                )}
+              </>
+            )}
           </div>
           <label className="description-label">
             Опис:
@@ -815,7 +967,17 @@ export const Other = () => {
                     </button>
                   </div>
                 </div>
-                <p>Тип: {item.usageType || 'Немає типу'}</p>
+                <p>Тип використання: {item.usageType || 'Немає типу'}</p>
+                {item.hasType && (
+                  <>
+                    <p>Тип: {item.type === 'damage' ? 'Урон' : 'Хіл'}</p>
+                    <p>{item.type === 'damage' ? 'Урон' : 'Зцілення'}: {item.damage}</p>
+                    {item.bonusStat && <p>Характеристика бонусу: {item.bonusStat}</p>}
+                    {item.hitBonus !== undefined && (
+                      <p>Бонус на попадання: {item.hitBonus >= 0 ? `+${item.hitBonus}` : item.hitBonus}</p>
+                    )}
+                  </>
+                )}
                 <p>{item.description}</p>
                 <button
                   className="delete-equipment-button"
