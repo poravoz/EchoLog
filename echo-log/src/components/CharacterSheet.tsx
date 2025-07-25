@@ -179,6 +179,8 @@ const statusDescriptions: { [key: string]: string } = {
   "Захоплення нейролінку": "Ваша швидкість 0, ви не можете її збільшити. Якщо вас тягнуть — переміщення кривдника уповільнюється вдвічі."
 };
 
+const hitDieTypes = ["d4", "d6", "d8", "d10", "d12"];
+
 const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
 const getStored = <T,>(key: string, defaultValue: T): T => {
@@ -198,7 +200,6 @@ const CharacterSheet: React.FC = () => {
       charisma: 10,
     })
   );
-
   const [skills, setSkills] = useState<Skills>(() =>
     getStored("skills", {
       strengthCheck: 0,
@@ -233,7 +234,6 @@ const CharacterSheet: React.FC = () => {
       persuasion: 0,
     })
   );
-
   const [humanity, setHumanity] = useState(() => getStored("humanity", { max: "", current: "" }));
   const [hp, setHp] = useState(() => getStored("hp", { max: "", current: "" }));
   const [tempHp, setTempHp] = useState(() => getStored("tempHp", ""));
@@ -247,6 +247,9 @@ const CharacterSheet: React.FC = () => {
   const [armor, setArmor] = useState(() => getStored("armor", ""));
   const [speed, setSpeed] = useState(() => getStored("speed", ""));
   const [proficiencyBonus, setProficiencyBonus] = useState(() => getStored("proficiencyBonus", 2));
+  const [hitDieType, setHitDieType] = useState(() => getStored("hitDieType", "d8"));
+  const [hitDiceUsed, setHitDiceUsed] = useState(() => getStored("hitDiceUsed", 0));
+  const [hitDiceToSpend, setHitDiceToSpend] = useState("");
   const [hpChange, setHpChange] = useState("");
   const [moneyChange, setMoneyChange] = useState("");
   const [tempHpChange, setTempHpChange] = useState("");
@@ -273,9 +276,11 @@ const CharacterSheet: React.FC = () => {
     localStorage.setItem("armor", JSON.stringify(armor));
     localStorage.setItem("speed", JSON.stringify(speed));
     localStorage.setItem("proficiencyBonus", JSON.stringify(proficiencyBonus));
+    localStorage.setItem("hitDieType", JSON.stringify(hitDieType));
+    localStorage.setItem("hitDiceUsed", JSON.stringify(hitDiceUsed));
     localStorage.setItem("heroicInspiration", JSON.stringify(heroicInspiration));
     localStorage.setItem("deathSaves", JSON.stringify(deathSaves));
-  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, heroicInspiration, deathSaves]);
+  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, hitDieType, hitDiceUsed, heroicInspiration, deathSaves]);
 
   useEffect(() => {
     const currentHp = parseInt(hp.current) || 0;
@@ -304,6 +309,7 @@ const CharacterSheet: React.FC = () => {
   const handleLevelChange = (value: string) => {
     const intValue = Math.min(20, Math.max(0, parseInt(value) || 0));
     setLevel(intValue);
+    setHitDiceUsed(prev => Math.min(prev, intValue));
   };
 
   const handleArmorChange = (value: string) => {
@@ -344,6 +350,15 @@ const CharacterSheet: React.FC = () => {
   const handleMoneyChange = (value: string) => {
     const intValue = parseInt(value) || 0;
     setMoney(intValue.toString());
+  };
+
+  const handleHitDieTypeChange = (value: string) => {
+    setHitDieType(value);
+  };
+
+  const handleHitDiceToSpendChange = (value: string) => {
+    const intValue = parseInt(value) || 0;
+    setHitDiceToSpend(intValue.toString());
   };
 
   const handleHpModificationChange = (value: string) => {
@@ -455,6 +470,47 @@ const CharacterSheet: React.FC = () => {
     return 10 + (parseInt(investigationBonus) || 0);
   };
 
+  const rollHitDie = (dieType: string): number => {
+    const sides = parseInt(dieType.slice(1));
+    return Math.floor(Math.random() * sides) + 1;
+  };
+
+  const handleShortRest = () => {
+    const diceToSpend = parseInt(hitDiceToSpend) || 0;
+    const availableDice = level - hitDiceUsed;
+    if (diceToSpend <= 0 || diceToSpend > availableDice) {
+      alert(`Ви можете використати від 1 до ${availableDice} костей хітів.`);
+      return;
+    }
+
+    const conModifier = getModifier(stats.constitution);
+    let totalHealing = 0;
+    for (let i = 0; i < diceToSpend; i++) {
+      totalHealing += rollHitDie(hitDieType) + conModifier;
+    }
+
+    const currentHp = parseInt(hp.current) || 0;
+    const maxHp = parseInt(hp.max) || 0;
+    const newHp = Math.min(currentHp + totalHealing, maxHp);
+
+    setHp(prev => ({ ...prev, current: newHp.toString() }));
+    setTempHp("0");
+    setHitDiceUsed(prev => prev + diceToSpend);
+    setHitDiceToSpend("");
+    if (newHp > 0) {
+      setDeathSaves({ successes: [false, false, false], failures: [false, false, false] });
+      setIsDeathSavesActive(false);
+    }
+  };
+
+  const handleLongRest = () => {
+    setHp(prev => ({ ...prev, current: prev.max }));
+    setTempHp("0");
+    setHitDiceUsed(0);
+    setDeathSaves({ successes: [false, false, false], failures: [false, false, false] });
+    setIsDeathSavesActive(false);
+  };
+
   const handleHpModification = (isHealing: boolean) => {
     const changeAmount = parseInt(hpChange) || 0;
     if (changeAmount <= 0) return;
@@ -521,13 +577,11 @@ const CharacterSheet: React.FC = () => {
         [type]: [...prev[type]]
       };
       newState[type][index] = !newState[type][index];
-      console.log(`Updated ${type} at index ${index} to ${newState[type][index]}`);
       
       const successCount = newState.successes.filter(Boolean).length;
       const failureCount = newState.failures.filter(Boolean).length;
 
       if (successCount >= 3 || failureCount >= 3) {
-        console.log(`Death saves ${successCount >= 3 ? 'succeeded' : 'failed'}, resetting death saves and hiding section`);
         setIsDeathSavesActive(false);
         return { successes: [false, false, false], failures: [false, false, false] };
       }
@@ -546,6 +600,42 @@ const CharacterSheet: React.FC = () => {
   return (
     <div className="character-sheet">
       <div className="avatar-container">
+        <div className="rest-controls">
+          <div className="rest-block">
+            <div className="short-rest">
+              <label>
+                Короткий відпочинок:
+                <select
+                  value={hitDieType}
+                  onChange={e => handleHitDieTypeChange(e.target.value)}
+                  className="hit-die-select"
+                >
+                  {hitDieTypes.map(die => (
+                    <option key={die} value={die}>{die}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  max={level - hitDiceUsed}
+                  value={formatValue(hitDiceToSpend)}
+                  onChange={e => handleHitDiceToSpendChange(e.target.value)}
+                  onBlur={e => {
+                    const newValue = formatValue(e.target.value);
+                    handleHitDiceToSpendChange(newValue);
+                  }}
+                  placeholder="Кості"
+                  className="hit-dice-input"
+                />
+                <span>({level - hitDiceUsed} залишилось)</span>
+              </label>
+            </div>
+            <div className="rest-buttons">
+              <button className="rest-buttons" onClick={handleShortRest}>Короткий</button>
+              <button className="rest-buttons" onClick={handleLongRest}>Довгий</button>
+            </div>
+          </div>
+        </div>
         <div className="backpack-container">
           <button onClick={handleBackpackClick} className="backpack-button">
             <ShoppingBagIcon className="backpack-icon" />
@@ -740,10 +830,7 @@ const CharacterSheet: React.FC = () => {
                     key={`success-${index}`}
                     type="checkbox"
                     checked={deathSaves.successes[index]}
-                    onChange={() => {
-                      console.log(`Clicked success checkbox ${index}`);
-                      handleDeathSaveChange('successes', index);
-                    }}
+                    onChange={() => handleDeathSaveChange('successes', index)}
                     className="death-save-checkbox"
                   />
                 ))}
@@ -755,10 +842,7 @@ const CharacterSheet: React.FC = () => {
                     key={`failure-${index}`}
                     type="checkbox"
                     checked={deathSaves.failures[index]}
-                    onChange={() => {
-                      console.log(`Clicked failure checkbox ${index}`);
-                      handleDeathSaveChange('failures', index);
-                    }}
+                    onChange={() => handleDeathSaveChange('failures', index)}
                     className="death-save-checkbox"
                   />
                 ))}

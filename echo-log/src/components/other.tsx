@@ -15,6 +15,7 @@ interface Equipment {
   name: string;
   quantity: number;
   description: string;
+  usageType?: 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу';
 }
 
 interface Firearm {
@@ -68,6 +69,7 @@ export const Other = () => {
     name: '',
     quantity: 0,
     description: '',
+    usageType: 'Немає типу' as 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу',
   });
   const [firearms, setFirearms] = useState<Firearm[]>(() => {
     const saved = localStorage.getItem('firearms');
@@ -193,7 +195,7 @@ export const Other = () => {
   };
 
   const handleSpecialEquipmentInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setNewSpecialEquipment((prev) => ({
@@ -210,9 +212,10 @@ export const Other = () => {
         name: newSpecialEquipment.name,
         quantity: Number(newSpecialEquipment.quantity),
         description: newSpecialEquipment.description,
+        usageType: newSpecialEquipment.usageType,
       };
       setSpecialEquipment((prev) => [...prev, equip]);
-      setNewSpecialEquipment({ name: '', quantity: 0, description: '' });
+      setNewSpecialEquipment({ name: '', quantity: 0, description: '', usageType: 'Немає типу' });
     }
   };
 
@@ -331,6 +334,25 @@ export const Other = () => {
     );
   };
 
+  const handleLongRest = () => {
+    setSpellSlots((prev) =>
+      prev.map((slot) => ({ ...slot, used: [] })),
+    );
+    setSpecialEquipment((prev) =>
+      prev.map((item) =>
+        item.usageType === 'Довгий відпочинок' ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
+    );
+  };
+
+  const handleShortRest = () => {
+    setSpecialEquipment((prev) =>
+      prev.map((item) =>
+        item.usageType === 'Короткий відпочинок' ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
+    );
+  };
+
   const handleBack = () => {
     navigate('/');
   };
@@ -372,6 +394,17 @@ export const Other = () => {
               </div>
             </div>
           ))}
+        </div>
+        <div className="rest-controls">
+          <h3 className="rest-title">Відпочинок</h3>
+          <div className="rest-block">
+            <button className="rest-button long" onClick={handleLongRest}>
+              Довгий відпочинок
+            </button>
+            <button className="rest-button short" onClick={handleShortRest}>
+              Короткий відпочинок
+            </button>
+          </div>
         </div>
       </div>
       <div className="section">
@@ -718,6 +751,18 @@ export const Other = () => {
                 required
               />
             </label>
+            <label>
+              Тип використання:
+              <select
+                name="usageType"
+                value={newSpecialEquipment.usageType}
+                onChange={handleSpecialEquipmentInputChange}
+              >
+                <option value="Немає типу">-</option>
+                <option value="Довгий відпочинок">Довгий відпочинок</option>
+                <option value="Короткий відпочинок">Короткий відпочинок</option>
+              </select>
+            </label>
           </div>
           <label className="description-label">
             Опис:
@@ -755,6 +800,7 @@ export const Other = () => {
                     </button>
                   </div>
                 </div>
+                <p>Тип: {item.usageType || 'Немає типу'}</p>
                 <p>{item.description}</p>
                 <button
                   className="delete-equipment-button"
