@@ -639,7 +639,7 @@ const CharacterSheet: React.FC = () => {
         <div className="backpack-container">
           <button onClick={handleBackpackClick} className="backpack-button">
             <ShoppingBagIcon className="backpack-icon" />
-            Рюкзак
+            Екіпіровка
           </button>
         </div>
         <div className="avatar-frame" onClick={handleAvatarClick}>
@@ -822,25 +822,29 @@ const CharacterSheet: React.FC = () => {
               <div className="death-saves-successes">
                 <span>Успіхи:</span>
                 {[0, 1, 2].map(index => (
-                  <input
-                    key={`success-${index}`}
-                    type="checkbox"
-                    checked={deathSaves.successes[index]}
-                    onChange={() => handleDeathSaveChange('successes', index)}
-                    className="death-save-checkbox"
-                  />
+                  <label key={`success-${index}`} className="death-save-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={deathSaves.successes[index]}
+                      onChange={() => handleDeathSaveChange('successes', index)}
+                      className="death-save-checkbox"
+                    />
+                    <span className="death-save-checkbox-custom"></span>
+                  </label>
                 ))}
               </div>
               <div className="death-saves-failures">
                 <span>Провали:</span>
                 {[0, 1, 2].map(index => (
-                  <input
-                    key={`failure-${index}`}
-                    type="checkbox"
-                    checked={deathSaves.failures[index]}
-                    onChange={() => handleDeathSaveChange('failures', index)}
-                    className="death-save-checkbox"
-                  />
+                  <label key={`failure-${index}`} className="death-save-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={deathSaves.failures[index]}
+                      onChange={() => handleDeathSaveChange('failures', index)}
+                      className="death-save-checkbox"
+                    />
+                    <span className="death-save-checkbox-custom"></span>
+                  </label>
                 ))}
               </div>
             </div>
@@ -951,13 +955,15 @@ const CharacterSheet: React.FC = () => {
             </label>
           </div>
           <div className="heroic-inspiration">
-            <label>
+            <label className="heroic-inspiration-label">
               Героїчне Натхнення:
               <input
                 type="checkbox"
                 checked={heroicInspiration}
                 onChange={e => setHeroicInspiration(e.target.checked)}
+                className="heroic-inspiration-checkbox"
               />
+              <span className="heroic-inspiration-checkbox-custom"></span>
             </label>
           </div>
         </div>
