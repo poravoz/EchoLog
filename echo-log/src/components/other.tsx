@@ -150,26 +150,26 @@ export const Other = () => {
   };
 
   const implantLimits: { [key: string]: number } = {
-    'Frontal Lobe': 3,
-    'Arms': 1,
-    'Skeleton': 3,
-    'Nervous System': 3,
-    'Skin': 3,
-    'Operating System': 1,
-    'Face': 1,
-    'Palms': 2,
-    'Circulatory System': 3,
-    'Legs': 1,
+    'Лобова частка': 3,
+    'Руки': 1,
+    'Скелет': 3,
+    'Нервова система': 3,
+    'Шкіра': 3,
+    'Операційна система': 1,
+    'Обличчя': 1,
+    'Долоні': 2,
+    'Система кровообігу': 3,
+    'Ноги': 1,
   };
 
   const statOptions = [
     '',
-    'Strength',
-    'Dexterity',
-    'Constitution',
-    'Intelligence',
-    'Reaction',
-    'Charisma',
+    'Сила', 
+    'Спритність', 
+    'Статура', 
+    'Інтелект', 
+    'Реакція', 
+    'Харизма',
   ];
 
   const handleSpellInputChange = (
@@ -493,16 +493,16 @@ export const Other = () => {
   return (
     <div className="character-sheet">
       <button className="back-button" onClick={handleBack}>
-        Back
+        Назад
       </button>
       <div className="section">
-        <h2 className="section-title">RAM Slots</h2>
+        <h2 className="section-title">Слоти оперативної пам'яті</h2>
         <div className="spell-slots-container">
           {characterData.spellSlots && characterData.spellSlots.length > 0 ? (
             characterData.spellSlots.map((slot) => (
               <div key={slot.level} className="spell-slot-level">
                 <label>
-                  Level {formatNumber(slot.level)}:
+                  Рівень {formatNumber(slot.level)}:
                   <input
                     type="number"
                     min="0"
@@ -560,22 +560,22 @@ export const Other = () => {
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Scripts</h2>
+        <h2 className="section-title">Скрипти</h2>
         <form onSubmit={handleAddSpell} className="spell-form">
           <div className="input-group">
             <label>
-              Script Name:
+              Назва скрипту:
               <input
                 type="text"
                 name="name"
                 value={newSpell.name}
                 onChange={handleSpellInputChange}
-                placeholder="Enter script name"
+                placeholder="Введіть назву скрипту"
                 required
               />
             </label>
             <label>
-              Level:
+              Рівень:
               <select name="level" value={newSpell.level} onChange={handleSpellInputChange}>
                 <option value="0">0</option>
                 {[...Array(9)].map((_, i) => (
@@ -586,11 +586,11 @@ export const Other = () => {
               </select>
             </label>
             <label>
-              Type:
+              Тип:
               <select name="type" value={newSpell.type} onChange={handleSpellInputChange}>
                 <option value="none">-</option>
-                <option value="damage">Damage</option>
-                <option value="heal">Heal</option>
+                <option value="damage">Урон</option>
+                <option value="heal">Хіл</option>
               </select>
             </label>
             {newSpell.type !== 'none' && (
@@ -607,7 +607,7 @@ export const Other = () => {
               </label>
             )}
             <label>
-              Bonus Stat:
+              Характеристика бонусу:
               <select name="bonusStat" value={newSpell.bonusStat} onChange={handleSpellInputChange}>
                 {statOptions.map((stat) => (
                   <option key={stat || 'none'} value={stat}>
@@ -618,7 +618,7 @@ export const Other = () => {
             </label>
             {newSpell.bonusStat && (
               <label>
-                Hit Bonus: +
+                Бонус на попадання: +
                 <input
                   type="number"
                   name="hitBonus"
@@ -630,7 +630,7 @@ export const Other = () => {
             )}
           </div>
           <label className="description-label">
-            Description:
+            Опис:
             <textarea
               name="description"
               value={newSpell.description}
@@ -640,7 +640,7 @@ export const Other = () => {
             />
           </label>
           <button type="submit" className="add-spell-button">
-            Add Script
+            Додати скрипт
           </button>
         </form>
         <div className="spells-list">
@@ -648,14 +648,14 @@ export const Other = () => {
             characterData.spells.map((spell) => (
               <div key={spell.id} className="spell-card">
                 <h3>{spell.name}</h3>
-                <p>Level: {spell.level === 0 ? '0 (Cantrip)' : formatNumber(spell.level)}</p>
-                <p>Type: {spell.type === 'damage' ? 'Damage' : spell.type === 'heal' ? 'Heal' : '-'}</p>
+                <p>Рівень: {spell.level === 0 ? '0 (Cantrip)' : formatNumber(spell.level)}</p>
+                <p>Тип: {spell.type === 'damage' ? 'Damage' : spell.type === 'heal' ? 'Heal' : '-'}</p>
                 {spell.damage && (
                   <p>{spell.type === 'damage' ? 'Damage' : 'Healing'}: {spell.damage}</p>
                 )}
-                {spell.bonusStat && <p>Bonus Stat: {spell.bonusStat}</p>}
+                {spell.bonusStat && <p>Характеристика бонусу: {spell.bonusStat}</p>}
                 {spell.hitBonus !== undefined && (
-                  <p>Hit Bonus: {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
+                  <p>Бонус на попадання + {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
                 )}
                 <p>{spell.description}</p>
                 <button
@@ -667,7 +667,7 @@ export const Other = () => {
               </div>
             ))
           ) : (
-            <p>No scripts added yet.</p>
+            <p>Жодних скриптів ще не додано.</p>
           )}
         </div>
       </div>
@@ -676,39 +676,39 @@ export const Other = () => {
         <form onSubmit={handleAddImplant} className="implant-form">
           <div className="input-group">
             <label>
-              Category:
+              Категорія:
               <select name="category" value={newImplant.category} onChange={handleImplantInputChange}>
                 {Object.keys(implantLimits).map((category) => (
                   <option key={category} value={category}>
-                    {category} (Max: {implantLimits[category]})
+                    {category} (Максимум: {implantLimits[category]})
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              Implant Name:
+              Назва імпланту:
               <input
                 type="text"
                 name="name"
                 value={newImplant.name}
                 onChange={handleImplantInputChange}
-                placeholder="Enter implant name"
+                placeholder="Введіть назву імплантату"
                 required
               />
             </label>
           </div>
           <label className="description-label">
-            Description:
+            Опис:
             <textarea
               name="description"
               value={newImplant.description}
               onChange={handleImplantInputChange}
-              placeholder="Enter implant description"
+              placeholder="Введіть опис імплантату"
               required
             />
           </label>
           <button type="submit" className="add-implant-button">
-            Add Implant
+            Додати імплантат
           </button>
         </form>
         <div className="implants-list">
@@ -726,7 +726,7 @@ export const Other = () => {
                         className="delete-implant-button"
                         onClick={() => handleDeleteImplant(implant.id)}
                       >
-                        Delete
+                        Видалити
                       </button>
                     </div>
                   ))}
@@ -734,38 +734,38 @@ export const Other = () => {
               ) : null;
             })
           ) : (
-            <p>No implants added yet.</p>
+            <p>Імплантатів ще не додано.</p>
           )}
         </div>
       </div>
       <div className="section firearm-section">
-        <h2 className="section-title">Weapons</h2>
+        <h2 className="section-title">Зброя</h2>
         <form onSubmit={handleAddFirearm} className="firearm-form">
           <div className="input-group">
             <label>
-              Weapon Name:
+              Назва зброї:
               <input
                 type="text"
                 name="name"
                 value={newFirearm.name}
                 onChange={handleFirearmInputChange}
-                placeholder="Enter weapon name"
+                placeholder="Введіть назву зброї"
                 required
               />
             </label>
             <label>
-              Damage:
+              Урон:
               <input
                 type="text"
                 name="damage"
                 value={newFirearm.damage}
                 onChange={handleFirearmInputChange}
-                placeholder="e.g., 2d8 piercing"
+                placeholder="наприклад, 2d8 вогню"
                 required
               />
             </label>
             <label>
-              Hit Bonus: +
+              Бонус на попадання: +
               <input
                 type="number"
                 name="hitBonus"
@@ -776,7 +776,7 @@ export const Other = () => {
               />
             </label>
             <label>
-              Bonus Stat:
+              Бонусна Характеристика:
               <select name="bonusStat" value={newFirearm.bonusStat} onChange={handleFirearmInputChange}>
                 {statOptions.map((stat) => (
                   <option key={stat || 'none'} value={stat}>
@@ -786,7 +786,7 @@ export const Other = () => {
               </select>
             </label>
             <label>
-              Has Ammo:
+              Є патрони:
               <input
                 type="checkbox"
                 name="hasAmmo"
@@ -796,7 +796,7 @@ export const Other = () => {
             </label>
             {newFirearm.hasAmmo && (
               <label>
-                Ammo:
+                Боєприпаси:
                 <input
                   type="number"
                   name="ammo"
@@ -809,7 +809,7 @@ export const Other = () => {
             )}
           </div>
           <label className="description-label">
-            Description:
+            Опис:
             <textarea
               name="description"
               value={newFirearm.description}
@@ -819,7 +819,7 @@ export const Other = () => {
             />
           </label>
           <button type="submit" className="add-firearm-button">
-            Add Weapon
+            Додати зброю
           </button>
         </form>
         <div className="firearms-list">
@@ -827,13 +827,13 @@ export const Other = () => {
             characterData.firearms.map((firearm) => (
               <div key={firearm.id} className="firearm-card">
                 <h3>{firearm.name}</h3>
-                <p>Damage: {firearm.damage}</p>
-                <p>Hit Bonus: {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
-                {firearm.bonusStat && <p>Bonus Stat: {firearm.bonusStat}</p>}
+                <p>Урон: {firearm.damage}</p>
+                <p>Бонус на попадання + {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
+                {firearm.bonusStat && <p>Бонусна характеристика: {firearm.bonusStat}</p>}
                 <p>{firearm.description}</p>
                 {firearm.hasAmmo && (
                   <div className="ammo-controls">
-                    <p>Ammo: {formatNumber(firearm.ammo)}</p>
+                    <p>Боєприпаси: {formatNumber(firearm.ammo)}</p>
                     <div className="ammo-buttons">
                       <button
                         className="ammo-button decrease"
@@ -854,32 +854,32 @@ export const Other = () => {
                   className="delete-firearm-button"
                   onClick={() => handleDeleteFirearm(firearm.id)}
                 >
-                  Delete
+                  Видалити
                 </button>
               </div>
             ))
           ) : (
-            <p>No weapons added yet.</p>
+            <p>Зброї ще не додано.</p>
           )}
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Equipment</h2>
+        <h2 className="section-title">Спорядження</h2>
         <form onSubmit={handleAddEquipment} className="equipment-form">
           <div className="input-group">
             <label>
-              Item Name:
+              назва предмету:
               <input
                 type="text"
                 name="name"
                 value={newEquipment.name}
                 onChange={handleEquipmentInputChange}
-                placeholder="Enter item name"
+                placeholder="Введіть назву предмету"
                 required
               />
             </label>
             <label>
-              Quantity:
+              Кількість:
               <input
                 type="number"
                 name="quantity"
@@ -891,17 +891,17 @@ export const Other = () => {
             </label>
           </div>
           <label className="description-label">
-            Description:
+            Опис:
             <textarea
               name="description"
               value={newEquipment.description}
               onChange={handleEquipmentInputChange}
-              placeholder="Enter item description"
+              placeholder="Введіть опис"
               required
             />
           </label>
           <button type="submit" className="add-equipment-button">
-            Add Equipment
+            Додати спорядження
           </button>
         </form>
         <div className="equipment-list">
@@ -910,7 +910,7 @@ export const Other = () => {
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
                 <div className="quantity-controls">
-                  <p>Quantity: {formatNumber(item.quantity)}</p>
+                  <p>Кількість: {formatNumber(item.quantity)}</p>
                   <div className="quantity-buttons">
                     <button
                       className="quantity-button decrease"
@@ -936,16 +936,16 @@ export const Other = () => {
               </div>
             ))
           ) : (
-            <p>No equipment added yet.</p>
+            <p>Обладнання ще не додано.</p>
           )}
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Special Equipment</h2>
+        <h2 className="section-title">Спеціальне спорядження</h2>
         <form onSubmit={handleAddSpecialEquipment} className="equipment-form">
           <div className="input-group">
             <label>
-              Special Item Name:
+              Назва предмету:
               <input
                 type="text"
                 name="name"
@@ -956,7 +956,7 @@ export const Other = () => {
               />
             </label>
             <label>
-              Quantity:
+              Кількість:
               <input
                 type="number"
                 name="quantity"
@@ -967,19 +967,19 @@ export const Other = () => {
               />
             </label>
             <label>
-              Usage Type:
+              Тип використання:
               <select
                 name="usageType"
                 value={newSpecialEquipment.usageType}
                 onChange={handleSpecialEquipmentInputChange}
               >
                 <option value="None">-</option>
-                <option value="Long Rest">Long Rest</option>
-                <option value="Short Rest">Short Rest</option>
+                <option value="Long Rest">Довгий відпочинок</option>
+                <option value="Short Rest">Короткий відпочинок</option>
               </select>
             </label>
             <label>
-              Has Damage/Heal Type:
+              Має тип пошкодження/лікування:
               <input
                 type="checkbox"
                 name="hasType"
@@ -990,14 +990,14 @@ export const Other = () => {
             {newSpecialEquipment.hasType && (
               <>
                 <label>
-                  Type:
+                  Тип:
                   <select name="type" value={newSpecialEquipment.type} onChange={handleSpecialEquipmentInputChange}>
-                    <option value="damage">Damage</option>
-                    <option value="heal">Heal</option>
+                    <option value="damage">Урон</option>
+                    <option value="heal">Хіл</option>
                   </select>
                 </label>
                 <label>
-                  Value:
+                  Кількість:
                   <input
                     type="text"
                     name="damage"
@@ -1008,7 +1008,7 @@ export const Other = () => {
                   />
                 </label>
                 <label>
-                  Bonus Stat:
+                  Бонусна характеристика:
                   <select name="bonusStat" value={newSpecialEquipment.bonusStat} onChange={handleSpecialEquipmentInputChange}>
                     {statOptions.map((stat) => (
                       <option key={stat || 'none'} value={stat}>
@@ -1019,7 +1019,7 @@ export const Other = () => {
                 </label>
                 {newSpecialEquipment.bonusStat && (
                   <label>
-                    Hit Bonus: +
+                    Бонус на попадання: +
                     <input
                       type="number"
                       name="hitBonus"
@@ -1033,7 +1033,7 @@ export const Other = () => {
             )}
           </div>
           <label className="description-label">
-            Description:
+            Опис:
             <textarea
               name="description"
               value={newSpecialEquipment.description}
@@ -1043,7 +1043,7 @@ export const Other = () => {
             />
           </label>
           <button type="submit" className="add-equipment-button">
-            Add Special Equipment
+            Додати спеціальне спорядження
           </button>
         </form>
         <div className="equipment-list">
@@ -1052,7 +1052,7 @@ export const Other = () => {
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
                 <div className="quantity-controls">
-                  <p>Quantity: {formatNumber(item.quantity)}</p>
+                  <p>Кількість: {formatNumber(item.quantity)}</p>
                   <div className="quantity-buttons">
                     <button
                       className="quantity-button decrease"
@@ -1068,14 +1068,14 @@ export const Other = () => {
                     </button>
                   </div>
                 </div>
-                <p>Usage Type: {item.usageType || 'None'}</p>
+                <p> Тип використання: {item.usageType || 'None'}</p>
                 {item.hasType && (
                   <>
-                    <p>Type: {item.type === 'damage' ? 'Damage' : 'Heal'}</p>
+                    <p>Тип: {item.type === 'damage' ? 'Damage' : 'Heal'}</p>
                     <p>{item.type === 'damage' ? 'Damage' : 'Healing'}: {item.damage}</p>
-                    {item.bonusStat && <p>Bonus Stat: {item.bonusStat}</p>}
+                    {item.bonusStat && <p>Бонусна характеристика: {item.bonusStat}</p>}
                     {item.hitBonus !== undefined && (
-                      <p>Hit Bonus: {item.hitBonus >= 0 ? `+${item.hitBonus}` : item.hitBonus}</p>
+                      <p>Бонус на попадання: {item.hitBonus >= 0 ? `+${item.hitBonus}` : item.hitBonus}</p>
                     )}
                   </>
                 )}
@@ -1084,12 +1084,12 @@ export const Other = () => {
                   className="delete-equipment-button"
                   onClick={() => handleDeleteSpecialEquipment(item.id)}
                 >
-                  Delete
+                  Видалити
                 </button>
               </div>
             ))
           ) : (
-            <p>No special equipment added yet.</p>
+            <p>Спеціального обладнання поки що не додано.</p>
           )}
         </div>
       </div>
