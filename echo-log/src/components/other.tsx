@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Other.css';
 
@@ -18,7 +18,14 @@ interface Equipment {
   name: string;
   quantity: number;
   description: string;
-  usageType?: 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу';
+}
+
+interface SpecialEquipment {
+  id: string;
+  name: string;
+  quantity: number;
+  description: string;
+  usageType?: 'Long Rest' | 'Short Rest' | 'None';
   hasType?: boolean;
   type?: 'damage' | 'heal';
   damage?: string;
@@ -50,11 +57,43 @@ interface SpellSlot {
   used: number[];
 }
 
+interface CharacterData {
+  spells: Spell[];
+  equipment: Equipment[];
+  specialEquipment: SpecialEquipment[];
+  firearms: Firearm[];
+  implants: Implant[];
+  spellSlots: SpellSlot[];
+}
+
+const defaultCharacterData: CharacterData = {
+  spells: [],
+  equipment: [],
+  specialEquipment: [],
+  firearms: [],
+  implants: [],
+  spellSlots: Array.from({ length: 9 }, (_, i) => ({
+    level: i + 1,
+    total: 0,
+    used: [],
+  })),
+};
+
 export const Other = () => {
   const navigate = useNavigate();
-  const [spells, setSpells] = useState<Spell[]>(() => {
-    const saved = localStorage.getItem('spells');
-    return saved ? JSON.parse(saved) : [];
+  const [characterData, setCharacterData] = useState<CharacterData>(() => {
+    try {
+      const saved = localStorage.getItem('characterData');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (isValidCharacterData(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing localStorage characterData:', error);
+    }
+    return defaultCharacterData;
   });
   const [newSpell, setNewSpell] = useState({
     name: '',
@@ -65,33 +104,21 @@ export const Other = () => {
     bonusStat: '',
     hitBonus: 0,
   });
-  const [equipment, setEquipment] = useState<Equipment[]>(() => {
-    const saved = localStorage.getItem('equipment');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [newEquipment, setNewEquipment] = useState({
     name: '',
     quantity: 0,
     description: '',
   });
-  const [specialEquipment, setSpecialEquipment] = useState<Equipment[]>(() => {
-    const saved = localStorage.getItem('specialEquipment');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [newSpecialEquipment, setNewSpecialEquipment] = useState({
     name: '',
     quantity: 0,
     description: '',
-    usageType: 'Немає типу' as 'Довгий відпочинок' | 'Короткий відпочинок' | 'Немає типу',
+    usageType: 'None' as 'Long Rest' | 'Short Rest' | 'None',
     hasType: false,
     type: 'damage' as 'damage' | 'heal',
     damage: '',
     hitBonus: 0,
     bonusStat: '',
-  });
-  const [firearms, setFirearms] = useState<Firearm[]>(() => {
-    const saved = localStorage.getItem('firearms');
-    return saved ? JSON.parse(saved) : [];
   });
   const [newFirearm, setNewFirearm] = useState({
     name: '',
@@ -102,49 +129,20 @@ export const Other = () => {
     ammo: 0,
     bonusStat: '',
   });
-  const [implants, setImplants] = useState<Implant[]>(() => {
-    const saved = localStorage.getItem('implants');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [newImplant, setNewImplant] = useState({
     name: '',
     description: '',
-    category: 'Лобна частка',
+    category: 'Frontal Lobe',
   });
-  const [spellSlots, setSpellSlots] = useState<SpellSlot[]>(() => {
-    const saved = localStorage.getItem('spellSlots');
-    return saved
-      ? JSON.parse(saved)
-      : Array.from({ length: 9 }, (_, i) => ({
-          level: i + 1,
-          total: 0,
-          used: [],
-        }));
-  });
+  const jsonFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('spells', JSON.stringify(spells));
-  }, [spells]);
+    localStorage.setItem('characterData', JSON.stringify(characterData));
+  }, [characterData]);
 
-  useEffect(() => {
-    localStorage.setItem('equipment', JSON.stringify(equipment));
-  }, [equipment]);
-
-  useEffect(() => {
-    localStorage.setItem('specialEquipment', JSON.stringify(specialEquipment));
-  }, [specialEquipment]);
-
-  useEffect(() => {
-    localStorage.setItem('firearms', JSON.stringify(firearms));
-  }, [firearms]);
-
-  useEffect(() => {
-    localStorage.setItem('implants', JSON.stringify(implants));
-  }, [implants]);
-
-  useEffect(() => {
-    localStorage.setItem('spellSlots', JSON.stringify(spellSlots));
-  }, [spellSlots]);
+  const updateCharacterData = (updates: Partial<CharacterData>) => {
+    setCharacterData(prev => ({ ...prev, ...updates }));
+  };
 
   const formatNumber = (num: number | string): string => {
     const numericValue = Number(num);
@@ -152,26 +150,26 @@ export const Other = () => {
   };
 
   const implantLimits: { [key: string]: number } = {
-    'Лобна частка': 3,
-    'Руки': 1,
-    'Скелет': 3,
-    'Нервова система': 3,
-    'Шкіра': 3,
-    'Операційна система': 1,
-    'Обличчя': 1,
-    'Долоні': 2,
-    'Кровоносна система': 3,
-    'Ноги': 1,
+    'Frontal Lobe': 3,
+    'Arms': 1,
+    'Skeleton': 3,
+    'Nervous System': 3,
+    'Skin': 3,
+    'Operating System': 1,
+    'Face': 1,
+    'Palms': 2,
+    'Circulatory System': 3,
+    'Legs': 1,
   };
 
   const statOptions = [
     '',
-    'Сила',
-    'Спритність',
-    'Статура',
-    'Інтелект',
-    'Реакція',
-    'Харизма',
+    'Strength',
+    'Dexterity',
+    'Constitution',
+    'Intelligence',
+    'Reaction',
+    'Charisma',
   ];
 
   const handleSpellInputChange = (
@@ -180,7 +178,7 @@ export const Other = () => {
     const { name, value } = e.target;
     setNewSpell((prev) => ({
       ...prev,
-      [name]: name === 'hitBonus' ? Number(formatNumber(value)) : 
+      [name]: name === 'hitBonus' ? Number(formatNumber(value)) :
              name === 'level' ? Number(value) : value,
       ...(name === 'type' && value === 'none' ? { damage: '', bonusStat: '', hitBonus: 0 } : {}),
       ...(name === 'bonusStat' && !value ? { hitBonus: 0 } : {}),
@@ -200,13 +198,15 @@ export const Other = () => {
         bonusStat: newSpell.bonusStat || undefined,
         hitBonus: newSpell.bonusStat ? Number(newSpell.hitBonus) : undefined,
       };
-      setSpells((prev) => [...prev, spell]);
+      updateCharacterData({ spells: [...characterData.spells, spell] });
       setNewSpell({ name: '', level: 0, damage: '', description: '', type: 'none', bonusStat: '', hitBonus: 0 });
     }
   };
 
   const handleDeleteSpell = (id: string) => {
-    setSpells((prev) => prev.filter((spell) => spell.id !== id));
+    updateCharacterData({
+      spells: characterData.spells.filter((spell) => spell.id !== id),
+    });
   };
 
   const handleEquipmentInputChange = (
@@ -228,7 +228,7 @@ export const Other = () => {
         quantity: Number(newEquipment.quantity),
         description: newEquipment.description,
       };
-      setEquipment((prev) => [...prev, equip]);
+      updateCharacterData({ equipment: [...characterData.equipment, equip] });
       setNewEquipment({ name: '', quantity: 0, description: '' });
     }
   };
@@ -239,7 +239,7 @@ export const Other = () => {
     const { name, value, type } = e.target;
     setNewSpecialEquipment((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
              name === 'quantity' || name === 'hitBonus' ? Number(formatNumber(value)) : value,
       ...(name === 'hasType' && !(e.target as HTMLInputElement).checked ? { type: 'damage', damage: '', hitBonus: 0, bonusStat: '' } : {}),
       ...(name === 'bonusStat' && !value ? { hitBonus: 0 } : {}),
@@ -249,7 +249,7 @@ export const Other = () => {
   const handleAddSpecialEquipment = (e: React.FormEvent) => {
     e.preventDefault();
     if (newSpecialEquipment.name && newSpecialEquipment.description) {
-      const equip: Equipment = {
+      const equip: SpecialEquipment = {
         id: crypto.randomUUID(),
         name: newSpecialEquipment.name,
         quantity: Number(newSpecialEquipment.quantity),
@@ -261,12 +261,14 @@ export const Other = () => {
         hitBonus: newSpecialEquipment.hasType && newSpecialEquipment.bonusStat ? Number(newSpecialEquipment.hitBonus) : undefined,
         bonusStat: newSpecialEquipment.hasType && newSpecialEquipment.bonusStat ? newSpecialEquipment.bonusStat : undefined,
       };
-      setSpecialEquipment((prev) => [...prev, equip]);
-      setNewSpecialEquipment({ 
-        name: '', 
-        quantity: 0, 
-        description: '', 
-        usageType: 'Немає типу',
+      updateCharacterData({
+        specialEquipment: [...characterData.specialEquipment, equip],
+      });
+      setNewSpecialEquipment({
+        name: '',
+        quantity: 0,
+        description: '',
+        usageType: 'None',
         hasType: false,
         type: 'damage',
         damage: '',
@@ -277,20 +279,24 @@ export const Other = () => {
   };
 
   const handleDeleteEquipment = (id: string) => {
-    setEquipment((prev) => prev.filter((equip) => equip.id !== id));
+    updateCharacterData({
+      equipment: characterData.equipment.filter((equip) => equip.id !== id),
+    });
   };
 
   const handleDeleteSpecialEquipment = (id: string) => {
-    setSpecialEquipment((prev) => prev.filter((equip) => equip.id !== id));
+    updateCharacterData({
+      specialEquipment: characterData.specialEquipment.filter((equip) => equip.id !== id),
+    });
   };
 
   const handleQuantityChange = (id: string, change: number, isSpecial: boolean) => {
-    const setItems = isSpecial ? setSpecialEquipment : setEquipment;
-    setItems((prev) =>
-      prev.map((item) =>
+    const key = isSpecial ? 'specialEquipment' : 'equipment';
+    updateCharacterData({
+      [key]: characterData[key].map((item) =>
         item.id === id ? { ...item, quantity: Math.max(0, item.quantity + change) } : item,
       ),
-    );
+    });
   };
 
   const handleFirearmInputChange = (
@@ -299,7 +305,7 @@ export const Other = () => {
     const { name, value, type } = e.target;
     setNewFirearm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
              name === 'ammo' || name === 'hitBonus' ? Number(formatNumber(value)) : value,
       ...(name === 'hasAmmo' && !(e.target as HTMLInputElement).checked ? { ammo: 0 } : {}),
     }));
@@ -318,13 +324,15 @@ export const Other = () => {
         ammo: newFirearm.hasAmmo ? Number(newFirearm.ammo) : 0,
         bonusStat: newFirearm.bonusStat || undefined,
       };
-      setFirearms((prev) => [...prev, firearm]);
+      updateCharacterData({ firearms: [...characterData.firearms, firearm] });
       setNewFirearm({ name: '', damage: '', hitBonus: 0, description: '', hasAmmo: false, ammo: 0, bonusStat: '' });
     }
   };
 
   const handleDeleteFirearm = (id: string) => {
-    setFirearms((prev) => prev.filter((firearm) => firearm.id !== id));
+    updateCharacterData({
+      firearms: characterData.firearms.filter((firearm) => firearm.id !== id),
+    });
   };
 
   const handleImplantInputChange = (
@@ -336,9 +344,9 @@ export const Other = () => {
 
   const handleAddImplant = (e: React.FormEvent) => {
     e.preventDefault();
-    const currentCount = implants.filter((implant) => implant.category === newImplant.category).length;
+    const currentCount = characterData.implants.filter((implant) => implant.category === newImplant.category).length;
     if (currentCount >= implantLimits[newImplant.category]) {
-      alert(`Досягнуто максимальної кількості імплантів для категорії "${newImplant.category}" (${implantLimits[newImplant.category]}).`);
+      alert(`Maximum number of implants reached for category "${newImplant.category}" (${implantLimits[newImplant.category]}).`);
       return;
     }
     if (newImplant.name && newImplant.description) {
@@ -348,39 +356,41 @@ export const Other = () => {
         description: newImplant.description,
         category: newImplant.category,
       };
-      setImplants((prev) => [...prev, implant]);
-      setNewImplant({ name: '', description: '', category: 'Лобна частка' });
+      updateCharacterData({ implants: [...characterData.implants, implant] });
+      setNewImplant({ name: '', description: '', category: 'Frontal Lobe' });
     }
   };
 
   const handleDeleteImplant = (id: string) => {
-    setImplants((prev) => prev.filter((implant) => implant.id !== id));
+    updateCharacterData({
+      implants: characterData.implants.filter((implant) => implant.id !== id),
+    });
   };
 
   const handleAmmoChange = (id: string, change: number) => {
-    setFirearms((prev) =>
-      prev.map((firearm) =>
+    updateCharacterData({
+      firearms: characterData.firearms.map((firearm) =>
         firearm.id === id && firearm.hasAmmo
           ? { ...firearm, ammo: Math.max(0, firearm.ammo + change) }
           : firearm,
       ),
-    );
+    });
   };
 
   const handleSlotChange = (level: number, total: number) => {
     const formattedTotal = Number(formatNumber(total));
-    setSpellSlots((prev) =>
-      prev.map((slot) =>
+    updateCharacterData({
+      spellSlots: characterData.spellSlots.map((slot) =>
         slot.level === level
           ? { ...slot, total: formattedTotal, used: slot.used.slice(0, formattedTotal) }
           : slot,
       ),
-    );
+    });
   };
 
   const handleSlotToggle = (level: number, index: number) => {
-    setSpellSlots((prev) =>
-      prev.map((slot) =>
+    updateCharacterData({
+      spellSlots: characterData.spellSlots.map((slot) =>
         slot.level === level
           ? {
               ...slot,
@@ -390,25 +400,89 @@ export const Other = () => {
             }
           : slot,
       ),
-    );
+    });
   };
 
   const handleLongRest = () => {
-    setSpellSlots((prev) =>
-      prev.map((slot) => ({ ...slot, used: [] })),
-    );
-    setSpecialEquipment((prev) =>
-      prev.map((item) =>
-        item.usageType === 'Довгий відпочинок' ? { ...item, quantity: item.quantity + 1 } : item,
+    updateCharacterData({
+      spellSlots: characterData.spellSlots.map((slot) => ({ ...slot, used: [] })),
+      specialEquipment: characterData.specialEquipment.map((item) =>
+        item.usageType === 'Long Rest' ? { ...item, quantity: item.quantity + 1 } : item,
       ),
-    );
+    });
   };
 
   const handleShortRest = () => {
-    setSpecialEquipment((prev) =>
-      prev.map((item) =>
-        item.usageType === 'Короткий відпочинок' ? { ...item, quantity: item.quantity + 1 } : item,
+    updateCharacterData({
+      specialEquipment: characterData.specialEquipment.map((item) =>
+        item.usageType === 'Short Rest' ? { ...item, quantity: item.quantity + 1 } : item,
       ),
+    });
+  };
+
+  const handleDownloadJson = () => {
+    const dataStr = JSON.stringify(characterData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'other-data.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUploadJsonClick = () => {
+    if (jsonFileInputRef.current) jsonFileInputRef.current.click();
+  };
+
+  const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const jsonData = JSON.parse(reader.result as string);
+          if (isValidCharacterData(jsonData)) {
+            setCharacterData(jsonData);
+            alert('Character data successfully loaded!');
+          } else {
+            console.error('Invalid JSON structure:', jsonData);
+            alert('Invalid JSON file format! Reverting to default data.');
+            setCharacterData(defaultCharacterData);
+          }
+        } catch (error) {
+          console.error('Error reading JSON file:', error);
+          alert('Error reading JSON file! Reverting to default data.');
+          setCharacterData(defaultCharacterData);
+        }
+      };
+      reader.readAsText(file);
+      if (jsonFileInputRef.current) jsonFileInputRef.current.value = '';
+    }
+  };
+
+  const isValidCharacterData = (data: any): data is CharacterData => {
+    if (!data || typeof data !== 'object') return false;
+    return (
+      Array.isArray(data.spells) &&
+      data.spells.every((spell: any) => typeof spell.id === 'string' && typeof spell.name === 'string' && typeof spell.description === 'string') &&
+      Array.isArray(data.equipment) &&
+      data.equipment.every((equip: any) => typeof equip.id === 'string' && typeof equip.name === 'string' && typeof equip.description === 'string' && typeof equip.quantity === 'number') &&
+      Array.isArray(data.specialEquipment) &&
+      data.specialEquipment.every((equip: any) => typeof equip.id === 'string' && typeof equip.name === 'string' && typeof equip.description === 'string' && typeof equip.quantity === 'number') &&
+      Array.isArray(data.firearms) &&
+      data.firearms.every((firearm: any) => typeof firearm.id === 'string' && typeof firearm.name === 'string' && typeof firearm.description === 'string' && typeof firearm.damage === 'string' && typeof firearm.hitBonus === 'number') &&
+      Array.isArray(data.implants) &&
+      data.implants.every((implant: any) => typeof implant.id === 'string' && typeof implant.name === 'string' && typeof implant.description === 'string' && typeof implant.category === 'string') &&
+      Array.isArray(data.spellSlots) &&
+      data.spellSlots.every((slot: any) =>
+        typeof slot.level === 'number' &&
+        typeof slot.total === 'number' &&
+        Array.isArray(slot.used) &&
+        slot.used.every((i: any) => typeof i === 'number')
+      )
     );
   };
 
@@ -419,45 +493,49 @@ export const Other = () => {
   return (
     <div className="character-sheet">
       <button className="back-button" onClick={handleBack}>
-        Назад
+        Back
       </button>
       <div className="section">
-        <h2 className="section-title">Слоти оперативної пам’яті</h2>
+        <h2 className="section-title">RAM Slots</h2>
         <div className="spell-slots-container">
-          {spellSlots.map((slot) => (
-            <div key={slot.level} className="spell-slot-level">
-              <label>
-                Рівень {formatNumber(slot.level)}:
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={formatNumber(slot.total)}
-                  onChange={(e) =>
-                    handleSlotChange(slot.level, Number(e.target.value))
-                  }
-                  className="slot-input"
-                />
-              </label>
-              <div className="slot-checkboxes">
-                {Array.from({ length: slot.total }).map((_, index) => (
-                  <label key={index} className="slot-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={slot.used.includes(index)}
-                      onChange={() => handleSlotToggle(slot.level, index)}
-                      className="slot-checkbox"
-                    />
-                    <span className="slot-checkbox-custom"></span>
-                    Слот {formatNumber(index + 1)}
-                  </label>
-                ))}
+          {characterData.spellSlots && characterData.spellSlots.length > 0 ? (
+            characterData.spellSlots.map((slot) => (
+              <div key={slot.level} className="spell-slot-level">
+                <label>
+                  Level {formatNumber(slot.level)}:
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={formatNumber(slot.total)}
+                    onChange={(e) =>
+                      handleSlotChange(slot.level, Number(e.target.value))
+                    }
+                    className="slot-input"
+                  />
+                </label>
+                <div className="slot-checkboxes">
+                  {Array.from({ length: slot.total }).map((_, index) => (
+                    <label key={index} className="slot-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={slot.used.includes(index)}
+                        onChange={() => handleSlotToggle(slot.level, index)}
+                        className="slot-checkbox"
+                      />
+                      <span className="slot-checkbox-custom"></span>
+                      Slot {formatNumber(index + 1)}
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p>No spell slots available.</p>
+          )}
         </div>
         <div className="rest-controls">
-          <h3 className="rest-title">Відпочинок</h3>
+          <h3 className="rest-title">Відпочинок/JSON</h3>
           <div className="rest-block">
             <button className="rest-button long" onClick={handleLongRest}>
               Довгий відпочинок
@@ -465,26 +543,39 @@ export const Other = () => {
             <button className="rest-button short" onClick={handleShortRest}>
               Короткий відпочинок
             </button>
+            <button className="rest-button long" onClick={handleDownloadJson}>
+              Download JSON
+            </button>
+            <button className="rest-button" onClick={handleUploadJsonClick}>
+              Upload JSON
+            </button>
+            <input
+              type="file"
+              accept="application/json"
+              onChange={handleJsonUpload}
+              ref={jsonFileInputRef}
+              style={{ display: 'none' }}
+            />
           </div>
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Скрипти</h2>
+        <h2 className="section-title">Scripts</h2>
         <form onSubmit={handleAddSpell} className="spell-form">
           <div className="input-group">
             <label>
-              Назва скрипту:
+              Script Name:
               <input
                 type="text"
                 name="name"
                 value={newSpell.name}
                 onChange={handleSpellInputChange}
-                placeholder="Введіть назву скрипту"
+                placeholder="Enter script name"
                 required
               />
             </label>
             <label>
-              Рівень:
+              Level:
               <select name="level" value={newSpell.level} onChange={handleSpellInputChange}>
                 <option value="0">0</option>
                 {[...Array(9)].map((_, i) => (
@@ -495,28 +586,28 @@ export const Other = () => {
               </select>
             </label>
             <label>
-              Тип:
+              Type:
               <select name="type" value={newSpell.type} onChange={handleSpellInputChange}>
                 <option value="none">-</option>
-                <option value="damage">Урон</option>
-                <option value="heal">Хіл</option>
+                <option value="damage">Damage</option>
+                <option value="heal">Heal</option>
               </select>
             </label>
             {newSpell.type !== 'none' && (
               <label>
-                Значення:
+                Value:
                 <input
                   type="text"
                   name="damage"
                   value={newSpell.damage}
                   onChange={handleSpellInputChange}
-                  placeholder={newSpell.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
+                  placeholder={newSpell.type === 'damage' ? 'e.g., 2d6 fire' : 'e.g., 2d6 healing'}
                   required
                 />
               </label>
             )}
             <label>
-              Характеристика бонусу:
+              Bonus Stat:
               <select name="bonusStat" value={newSpell.bonusStat} onChange={handleSpellInputChange}>
                 {statOptions.map((stat) => (
                   <option key={stat || 'none'} value={stat}>
@@ -527,103 +618,103 @@ export const Other = () => {
             </label>
             {newSpell.bonusStat && (
               <label>
-                Бонус на попадання: +
+                Hit Bonus: +
                 <input
                   type="number"
                   name="hitBonus"
                   value={formatNumber(newSpell.hitBonus)}
                   onChange={handleSpellInputChange}
-                  placeholder="Напр., +2"
+                  placeholder="e.g., +2"
                 />
               </label>
             )}
           </div>
           <label className="description-label">
-            Опис:
+            Description:
             <textarea
               name="description"
               value={newSpell.description}
               onChange={handleSpellInputChange}
-              placeholder="Введіть опис скрипту"
+              placeholder="Enter script description"
               required
             />
           </label>
           <button type="submit" className="add-spell-button">
-            Додати скрипт
+            Add Script
           </button>
         </form>
         <div className="spells-list">
-          {spells.length > 0 ? (
-            spells.map((spell) => (
+          {characterData.spells.length > 0 ? (
+            characterData.spells.map((spell) => (
               <div key={spell.id} className="spell-card">
                 <h3>{spell.name}</h3>
-                <p>Рівень: {spell.level === 0 ? '0 (Замовляння)' : formatNumber(spell.level)}</p>
-                <p>Тип: {spell.type === 'damage' ? 'Урон' : spell.type === 'heal' ? 'Хіл' : '-'}</p>
+                <p>Level: {spell.level === 0 ? '0 (Cantrip)' : formatNumber(spell.level)}</p>
+                <p>Type: {spell.type === 'damage' ? 'Damage' : spell.type === 'heal' ? 'Heal' : '-'}</p>
                 {spell.damage && (
-                  <p>{spell.type === 'damage' ? 'Урон' : 'Зцілення'}: {spell.damage}</p>
+                  <p>{spell.type === 'damage' ? 'Damage' : 'Healing'}: {spell.damage}</p>
                 )}
-                {spell.bonusStat && <p>Характеристика бонусу: {spell.bonusStat}</p>}
+                {spell.bonusStat && <p>Bonus Stat: {spell.bonusStat}</p>}
                 {spell.hitBonus !== undefined && (
-                  <p>Бонус на попадання: {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
+                  <p>Hit Bonus: {spell.hitBonus >= 0 ? `+${spell.hitBonus}` : spell.hitBonus}</p>
                 )}
                 <p>{spell.description}</p>
                 <button
                   className="delete-spell-button"
                   onClick={() => handleDeleteSpell(spell.id)}
                 >
-                  Видалити
+                  Delete
                 </button>
               </div>
             ))
           ) : (
-            <p>Скрипти ще не додані.</p>
+            <p>No scripts added yet.</p>
           )}
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Імпланти</h2>
+        <h2 className="section-title">Implants</h2>
         <form onSubmit={handleAddImplant} className="implant-form">
           <div className="input-group">
             <label>
-              Категорія:
+              Category:
               <select name="category" value={newImplant.category} onChange={handleImplantInputChange}>
                 {Object.keys(implantLimits).map((category) => (
                   <option key={category} value={category}>
-                    {category} (Макс: {implantLimits[category]})
+                    {category} (Max: {implantLimits[category]})
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              Назва імпланту:
+              Implant Name:
               <input
                 type="text"
                 name="name"
                 value={newImplant.name}
                 onChange={handleImplantInputChange}
-                placeholder="Введіть назву імпланту"
+                placeholder="Enter implant name"
                 required
               />
             </label>
           </div>
           <label className="description-label">
-            Опис:
+            Description:
             <textarea
               name="description"
               value={newImplant.description}
               onChange={handleImplantInputChange}
-              placeholder="Введіть опис імпланту"
+              placeholder="Enter implant description"
               required
             />
           </label>
           <button type="submit" className="add-implant-button">
-            Додати імплант
+            Add Implant
           </button>
         </form>
         <div className="implants-list">
-          {implants.length > 0 ? (
+          {characterData.implants.length > 0 ? (
             Object.keys(implantLimits).map((category) => {
-              const categoryImplants = implants.filter((implant) => implant.category === category);
+              const categoryImplants = characterData.implants.filter((implant) => implant.category === category);
               return categoryImplants.length > 0 ? (
                 <div key={category} className="implant-category">
                   <h3>{category}</h3>
@@ -635,7 +726,7 @@ export const Other = () => {
                         className="delete-implant-button"
                         onClick={() => handleDeleteImplant(implant.id)}
                       >
-                        Видалити
+                        Delete
                       </button>
                     </div>
                   ))}
@@ -643,49 +734,49 @@ export const Other = () => {
               ) : null;
             })
           ) : (
-            <p>Імпланти ще не додані.</p>
+            <p>No implants added yet.</p>
           )}
         </div>
       </div>
       <div className="section firearm-section">
-        <h2 className="section-title">Зброя</h2>
+        <h2 className="section-title">Weapons</h2>
         <form onSubmit={handleAddFirearm} className="firearm-form">
           <div className="input-group">
             <label>
-              Назва зброї:
+              Weapon Name:
               <input
                 type="text"
                 name="name"
                 value={newFirearm.name}
                 onChange={handleFirearmInputChange}
-                placeholder="Введіть назву зброї"
+                placeholder="Enter weapon name"
                 required
               />
             </label>
             <label>
-              Урон:
+              Damage:
               <input
                 type="text"
                 name="damage"
                 value={newFirearm.damage}
                 onChange={handleFirearmInputChange}
-                placeholder="Напр., 2d8 колючий"
+                placeholder="e.g., 2d8 piercing"
                 required
               />
             </label>
             <label>
-              Бонус на попадання: +
+              Hit Bonus: +
               <input
                 type="number"
                 name="hitBonus"
                 value={formatNumber(newFirearm.hitBonus)}
                 onChange={handleFirearmInputChange}
-                placeholder="Напр., +2"
+                placeholder="e.g., +2"
                 required
               />
             </label>
             <label>
-              Характеристика бонусу:
+              Bonus Stat:
               <select name="bonusStat" value={newFirearm.bonusStat} onChange={handleFirearmInputChange}>
                 {statOptions.map((stat) => (
                   <option key={stat || 'none'} value={stat}>
@@ -695,7 +786,7 @@ export const Other = () => {
               </select>
             </label>
             <label>
-              Має патрони:
+              Has Ammo:
               <input
                 type="checkbox"
                 name="hasAmmo"
@@ -705,7 +796,7 @@ export const Other = () => {
             </label>
             {newFirearm.hasAmmo && (
               <label>
-                Патрони:
+                Ammo:
                 <input
                   type="number"
                   name="ammo"
@@ -718,31 +809,31 @@ export const Other = () => {
             )}
           </div>
           <label className="description-label">
-            Опис:
+            Description:
             <textarea
               name="description"
               value={newFirearm.description}
               onChange={handleFirearmInputChange}
-              placeholder="Введіть опис зброї"
+              placeholder="Enter weapon description"
               required
             />
           </label>
           <button type="submit" className="add-firearm-button">
-            Додати зброю
+            Add Weapon
           </button>
         </form>
         <div className="firearms-list">
-          {firearms.length > 0 ? (
-            firearms.map((firearm) => (
+          {characterData.firearms.length > 0 ? (
+            characterData.firearms.map((firearm) => (
               <div key={firearm.id} className="firearm-card">
                 <h3>{firearm.name}</h3>
-                <p>Урон: {firearm.damage}</p>
-                <p>Бонус на попадання: {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
-                {firearm.bonusStat && <p>Характеристика бонусу: {firearm.bonusStat}</p>}
+                <p>Damage: {firearm.damage}</p>
+                <p>Hit Bonus: {firearm.hitBonus >= 0 ? `+${firearm.hitBonus}` : firearm.hitBonus}</p>
+                {firearm.bonusStat && <p>Bonus Stat: {firearm.bonusStat}</p>}
                 <p>{firearm.description}</p>
                 {firearm.hasAmmo && (
                   <div className="ammo-controls">
-                    <p>Патрони: {formatNumber(firearm.ammo)}</p>
+                    <p>Ammo: {formatNumber(firearm.ammo)}</p>
                     <div className="ammo-buttons">
                       <button
                         className="ammo-button decrease"
@@ -763,32 +854,32 @@ export const Other = () => {
                   className="delete-firearm-button"
                   onClick={() => handleDeleteFirearm(firearm.id)}
                 >
-                  Видалити
+                  Delete
                 </button>
               </div>
             ))
           ) : (
-            <p>Зброя ще не додана.</p>
+            <p>No weapons added yet.</p>
           )}
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Спорядження</h2>
+        <h2 className="section-title">Equipment</h2>
         <form onSubmit={handleAddEquipment} className="equipment-form">
           <div className="input-group">
             <label>
-              Назва предмета:
+              Item Name:
               <input
                 type="text"
                 name="name"
                 value={newEquipment.name}
                 onChange={handleEquipmentInputChange}
-                placeholder="Введіть назву предмета"
+                placeholder="Enter item name"
                 required
               />
             </label>
             <label>
-              Кількість:
+              Quantity:
               <input
                 type="number"
                 name="quantity"
@@ -800,26 +891,26 @@ export const Other = () => {
             </label>
           </div>
           <label className="description-label">
-            Опис:
+            Description:
             <textarea
               name="description"
               value={newEquipment.description}
               onChange={handleEquipmentInputChange}
-              placeholder="Введіть опис предмета"
+              placeholder="Enter item description"
               required
             />
           </label>
           <button type="submit" className="add-equipment-button">
-            Додати спорядження
+            Add Equipment
           </button>
         </form>
         <div className="equipment-list">
-          {equipment.length > 0 ? (
-            equipment.map((item) => (
+          {characterData.equipment.length > 0 ? (
+            characterData.equipment.map((item) => (
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
                 <div className="quantity-controls">
-                  <p>Кількість: {formatNumber(item.quantity)}</p>
+                  <p>Quantity: {formatNumber(item.quantity)}</p>
                   <div className="quantity-buttons">
                     <button
                       className="quantity-button decrease"
@@ -840,32 +931,32 @@ export const Other = () => {
                   className="delete-equipment-button"
                   onClick={() => handleDeleteEquipment(item.id)}
                 >
-                  Видалити
+                  Delete
                 </button>
               </div>
             ))
           ) : (
-            <p>Спорядження ще не додане.</p>
+            <p>No equipment added yet.</p>
           )}
         </div>
       </div>
       <div className="section">
-        <h2 className="section-title">Особливе спорядження</h2>
+        <h2 className="section-title">Special Equipment</h2>
         <form onSubmit={handleAddSpecialEquipment} className="equipment-form">
           <div className="input-group">
             <label>
-              Назва особливого предмета:
+              Special Item Name:
               <input
                 type="text"
                 name="name"
                 value={newSpecialEquipment.name}
                 onChange={handleSpecialEquipmentInputChange}
-                placeholder="Введіть назву предмета"
+                placeholder="Enter special item name"
                 required
               />
             </label>
             <label>
-              Кількість:
+              Quantity:
               <input
                 type="number"
                 name="quantity"
@@ -876,19 +967,19 @@ export const Other = () => {
               />
             </label>
             <label>
-              Тип використання:
+              Usage Type:
               <select
                 name="usageType"
                 value={newSpecialEquipment.usageType}
                 onChange={handleSpecialEquipmentInputChange}
               >
-                <option value="Немає типу">-</option>
-                <option value="Довгий відпочинок">Довгий відпочинок</option>
-                <option value="Короткий відпочинок">Короткий відпочинок</option>
+                <option value="None">-</option>
+                <option value="Long Rest">Long Rest</option>
+                <option value="Short Rest">Short Rest</option>
               </select>
             </label>
             <label>
-              Має тип урон/хіл:
+              Has Damage/Heal Type:
               <input
                 type="checkbox"
                 name="hasType"
@@ -899,25 +990,25 @@ export const Other = () => {
             {newSpecialEquipment.hasType && (
               <>
                 <label>
-                  Тип:
+                  Type:
                   <select name="type" value={newSpecialEquipment.type} onChange={handleSpecialEquipmentInputChange}>
-                    <option value="damage">Урон</option>
-                    <option value="heal">Хіл</option>
+                    <option value="damage">Damage</option>
+                    <option value="heal">Heal</option>
                   </select>
                 </label>
                 <label>
-                  Значення:
+                  Value:
                   <input
                     type="text"
                     name="damage"
                     value={newSpecialEquipment.damage}
                     onChange={handleSpecialEquipmentInputChange}
-                    placeholder={newSpecialEquipment.type === 'damage' ? 'Напр., 2d6 вогню' : 'Напр., 2d6 зцілення'}
+                    placeholder={newSpecialEquipment.type === 'damage' ? 'e.g., 2d6 fire' : 'e.g., 2d6 healing'}
                     required
                   />
                 </label>
                 <label>
-                  Характеристика бонусу:
+                  Bonus Stat:
                   <select name="bonusStat" value={newSpecialEquipment.bonusStat} onChange={handleSpecialEquipmentInputChange}>
                     {statOptions.map((stat) => (
                       <option key={stat || 'none'} value={stat}>
@@ -928,13 +1019,13 @@ export const Other = () => {
                 </label>
                 {newSpecialEquipment.bonusStat && (
                   <label>
-                    Бонус на попадання: +
+                    Hit Bonus: +
                     <input
                       type="number"
                       name="hitBonus"
                       value={formatNumber(newSpecialEquipment.hitBonus)}
                       onChange={handleSpecialEquipmentInputChange}
-                      placeholder="Напр., +2"
+                      placeholder="e.g., +2"
                     />
                   </label>
                 )}
@@ -942,26 +1033,26 @@ export const Other = () => {
             )}
           </div>
           <label className="description-label">
-            Опис:
+            Description:
             <textarea
               name="description"
               value={newSpecialEquipment.description}
               onChange={handleSpecialEquipmentInputChange}
-              placeholder="Введіть опис предмета"
+              placeholder="Enter special item description"
               required
             />
           </label>
           <button type="submit" className="add-equipment-button">
-            Додати особливе спорядження
+            Add Special Equipment
           </button>
         </form>
         <div className="equipment-list">
-          {specialEquipment.length > 0 ? (
-            specialEquipment.map((item) => (
+          {characterData.specialEquipment.length > 0 ? (
+            characterData.specialEquipment.map((item) => (
               <div key={item.id} className="equipment-card">
                 <h3>{item.name}</h3>
                 <div className="quantity-controls">
-                  <p>Кількість: {formatNumber(item.quantity)}</p>
+                  <p>Quantity: {formatNumber(item.quantity)}</p>
                   <div className="quantity-buttons">
                     <button
                       className="quantity-button decrease"
@@ -977,14 +1068,14 @@ export const Other = () => {
                     </button>
                   </div>
                 </div>
-                <p>Тип використання: {item.usageType || 'Немає типу'}</p>
+                <p>Usage Type: {item.usageType || 'None'}</p>
                 {item.hasType && (
                   <>
-                    <p>Тип: {item.type === 'damage' ? 'Урон' : 'Хіл'}</p>
-                    <p>{item.type === 'damage' ? 'Урон' : 'Зцілення'}: {item.damage}</p>
-                    {item.bonusStat && <p>Характеристика бонусу: {item.bonusStat}</p>}
+                    <p>Type: {item.type === 'damage' ? 'Damage' : 'Heal'}</p>
+                    <p>{item.type === 'damage' ? 'Damage' : 'Healing'}: {item.damage}</p>
+                    {item.bonusStat && <p>Bonus Stat: {item.bonusStat}</p>}
                     {item.hitBonus !== undefined && (
-                      <p>Бонус на попадання: {item.hitBonus >= 0 ? `+${item.hitBonus}` : item.hitBonus}</p>
+                      <p>Hit Bonus: {item.hitBonus >= 0 ? `+${item.hitBonus}` : item.hitBonus}</p>
                     )}
                   </>
                 )}
@@ -993,12 +1084,12 @@ export const Other = () => {
                   className="delete-equipment-button"
                   onClick={() => handleDeleteSpecialEquipment(item.id)}
                 >
-                  Видалити
+                  Delete
                 </button>
               </div>
             ))
           ) : (
-            <p>Особливе спорядження ще не додане.</p>
+            <p>No special equipment added yet.</p>
           )}
         </div>
       </div>

@@ -5,19 +5,19 @@ import { ShoppingBagIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
 
 const defaultImage = "/avatar.png";
 
-type Stats = {
+interface Stats {
   strength: number;
   dexterity: number;
   constitution: number;
   intelligence: number;
   reaction: number;
   charisma: number;
-};
+}
 
 type SkillProficiency = 0 | 1;
 type RegularSkillProficiency = 0 | 1 | 2;
 
-type Skills = {
+interface Skills {
   strengthCheck: 0;
   strengthSave: SkillProficiency;
   athletics: RegularSkillProficiency;
@@ -48,6 +48,88 @@ type Skills = {
   intimidation: RegularSkillProficiency;
   deception: RegularSkillProficiency;
   persuasion: RegularSkillProficiency;
+}
+
+interface CharacterData {
+  stats: Stats;
+  skills: Skills;
+  humanity: { max: string; current: string };
+  hp: { max: string; current: string };
+  tempHp: string;
+  exhaustion: number;
+  status: string;
+  money: string;
+  name: string;
+  role: string;
+  level: number;
+  image: string;
+  armor: string;
+  speed: string;
+  proficiencyBonus: number;
+  hitDieType: string;
+  hitDiceUsed: number;
+  heroicInspiration: boolean;
+  deathSaves: { successes: boolean[]; failures: boolean[] };
+}
+
+const defaultCharacterData: CharacterData = {
+  stats: {
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    reaction: 10,
+    charisma: 10,
+  },
+  skills: {
+    strengthCheck: 0,
+    strengthSave: 0,
+    athletics: 0,
+    dexterityCheck: 0,
+    dexteritySave: 0,
+    acrobatics: 0,
+    sleightOfHand: 0,
+    stealth: 0,
+    constitutionCheck: 0,
+    constitutionSave: 0,
+    intelligenceCheck: 0,
+    intelligenceSave: 0,
+    investigation: 0,
+    history: 0,
+    hacking: 0,
+    streetwise: 0,
+    religion: 0,
+    reactionCheck: 0,
+    reactionSave: 0,
+    perception: 0,
+    survival: 0,
+    medicine: 0,
+    insight: 0,
+    driving: 0,
+    charismaCheck: 0,
+    charismaSave: 0,
+    performance: 0,
+    intimidation: 0,
+    deception: 0,
+    persuasion: 0,
+  },
+  humanity: { max: "", current: "" },
+  hp: { max: "", current: "" },
+  tempHp: "",
+  exhaustion: 0,
+  status: "-",
+  money: "",
+  name: "",
+  role: "Корпорат",
+  level: 1,
+  image: "",
+  armor: "",
+  speed: "",
+  proficiencyBonus: 2,
+  hitDieType: "d8",
+  hitDiceUsed: 0,
+  heroicInspiration: false,
+  deathSaves: { successes: [false, false, false], failures: [false, false, false] },
 };
 
 const abilities = [
@@ -65,11 +147,11 @@ const roles = [
 
 type SkillType = "check" | "save" | "skill";
 
-type SkillDefinition = {
+interface SkillDefinition {
   key: keyof Skills;
   label: string;
   type: SkillType;
-};
+}
 
 const skillGroups: {
   ability: keyof Stats;
@@ -183,111 +265,36 @@ const hitDieTypes = ["d4", "d6", "d8", "d10", "d12"];
 
 const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
-const getStored = <T,>(key: string, defaultValue: T): T => {
-  const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : defaultValue;
-};
-
 const CharacterSheet: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>(() =>
-    getStored("stats", {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      reaction: 10,
-      charisma: 10,
-    })
-  );
-  const [skills, setSkills] = useState<Skills>(() =>
-    getStored("skills", {
-      strengthCheck: 0,
-      strengthSave: 0,
-      athletics: 0,
-      dexterityCheck: 0,
-      dexteritySave: 0,
-      acrobatics: 0,
-      sleightOfHand: 0,
-      stealth: 0,
-      constitutionCheck: 0,
-      constitutionSave: 0,
-      intelligenceCheck: 0,
-      intelligenceSave: 0,
-      investigation: 0,
-      history: 0,
-      hacking: 0,
-      streetwise: 0,
-      religion: 0,
-      reactionCheck: 0,
-      reactionSave: 0,
-      perception: 0,
-      survival: 0,
-      medicine: 0,
-      insight: 0,
-      driving: 0,
-      charismaCheck: 0,
-      charismaSave: 0,
-      performance: 0,
-      intimidation: 0,
-      deception: 0,
-      persuasion: 0,
-    })
-  );
-  const [humanity, setHumanity] = useState(() => getStored("humanity", { max: "", current: "" }));
-  const [hp, setHp] = useState(() => getStored("hp", { max: "", current: "" }));
-  const [tempHp, setTempHp] = useState(() => getStored("tempHp", ""));
-  const [exhaustion, setExhaustion] = useState(() => getStored("exhaustion", 0));
-  const [status, setStatus] = useState(() => getStored("status", "-"));
-  const [money, setMoney] = useState(() => getStored("money", ""));
-  const [name, setName] = useState(() => getStored("name", ""));
-  const [role, setRole] = useState(() => getStored("role", "Корпорат"));
-  const [level, setLevel] = useState(() => getStored("level", 1));
-  const [image, setImage] = useState(() => getStored("image", ""));
-  const [armor, setArmor] = useState(() => getStored("armor", ""));
-  const [speed, setSpeed] = useState(() => getStored("speed", ""));
-  const [proficiencyBonus, setProficiencyBonus] = useState(() => getStored("proficiencyBonus", 2));
-  const [hitDieType, setHitDieType] = useState(() => getStored("hitDieType", "d8"));
-  const [hitDiceUsed, setHitDiceUsed] = useState(() => getStored("hitDiceUsed", 0));
+  const [stats, setStats] = useState<Stats>(defaultCharacterData.stats);
+  const [skills, setSkills] = useState<Skills>(defaultCharacterData.skills);
+  const [humanity, setHumanity] = useState(defaultCharacterData.humanity);
+  const [hp, setHp] = useState(defaultCharacterData.hp);
+  const [tempHp, setTempHp] = useState(defaultCharacterData.tempHp);
+  const [exhaustion, setExhaustion] = useState(defaultCharacterData.exhaustion);
+  const [status, setStatus] = useState(defaultCharacterData.status);
+  const [money, setMoney] = useState(defaultCharacterData.money);
+  const [name, setName] = useState(defaultCharacterData.name);
+  const [role, setRole] = useState(defaultCharacterData.role);
+  const [level, setLevel] = useState(defaultCharacterData.level);
+  const [image, setImage] = useState(defaultCharacterData.image);
+  const [armor, setArmor] = useState(defaultCharacterData.armor);
+  const [speed, setSpeed] = useState(defaultCharacterData.speed);
+  const [proficiencyBonus, setProficiencyBonus] = useState(defaultCharacterData.proficiencyBonus);
+  const [hitDieType, setHitDieType] = useState(defaultCharacterData.hitDieType);
+  const [hitDiceUsed, setHitDiceUsed] = useState(defaultCharacterData.hitDiceUsed);
   const [hitDiceToSpend, setHitDiceToSpend] = useState("");
   const [hpChange, setHpChange] = useState("");
   const [moneyChange, setMoneyChange] = useState("");
   const [tempHpChange, setTempHpChange] = useState("");
-  const [heroicInspiration, setHeroicInspiration] = useState(() => getStored("heroicInspiration", false));
-  const [deathSaves, setDeathSaves] = useState(() => getStored("deathSaves", { successes: [false, false, false], failures: [false, false, false] }));
-  const [isDeathSavesActive, setIsDeathSavesActive] = useState(() => parseInt(getStored("hp", { max: "", current: "" }).current) === 0);
+  const [heroicInspiration, setHeroicInspiration] = useState(defaultCharacterData.heroicInspiration);
+  const [deathSaves, setDeathSaves] = useState(defaultCharacterData.deathSaves);
+  const [isDeathSavesActive, setIsDeathSavesActive] = useState(parseInt(defaultCharacterData.hp.current) === 0);
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusSelectRef = useRef<HTMLSelectElement>(null);
-
-  useEffect(() => {
-    localStorage.setItem("stats", JSON.stringify(stats));
-    localStorage.setItem("skills", JSON.stringify(skills));
-    localStorage.setItem("humanity", JSON.stringify(humanity));
-    localStorage.setItem("hp", JSON.stringify(hp));
-    localStorage.setItem("tempHp", JSON.stringify(tempHp));
-    localStorage.setItem("exhaustion", JSON.stringify(exhaustion));
-    localStorage.setItem("status", JSON.stringify(status));
-    localStorage.setItem("money", JSON.stringify(money));
-    localStorage.setItem("name", JSON.stringify(name));
-    localStorage.setItem("role", JSON.stringify(role));
-    localStorage.setItem("level", JSON.stringify(level));
-    localStorage.setItem("image", JSON.stringify(image));
-    localStorage.setItem("armor", JSON.stringify(armor));
-    localStorage.setItem("speed", JSON.stringify(speed));
-    localStorage.setItem("proficiencyBonus", JSON.stringify(proficiencyBonus));
-    localStorage.setItem("hitDieType", JSON.stringify(hitDieType));
-    localStorage.setItem("hitDiceUsed", JSON.stringify(hitDiceUsed));
-    localStorage.setItem("heroicInspiration", JSON.stringify(heroicInspiration));
-    localStorage.setItem("deathSaves", JSON.stringify(deathSaves));
-  }, [stats, skills, humanity, hp, tempHp, exhaustion, status, money, name, role, level, image, armor, speed, proficiencyBonus, hitDieType, hitDiceUsed, heroicInspiration, deathSaves]);
-
-  useEffect(() => {
-    const currentHp = parseInt(hp.current) || 0;
-    if (currentHp === 0) {
-      setIsDeathSavesActive(true);
-    }
-  }, [hp.current]);
+  const loadFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -301,15 +308,82 @@ const CharacterSheet: React.FC = () => {
     };
   }, []);
 
+  const saveToJson = () => {
+    const characterData: CharacterData = {
+      stats,
+      skills,
+      humanity,
+      hp,
+      tempHp,
+      exhaustion,
+      status,
+      money,
+      name,
+      role,
+      level,
+      image,
+      armor,
+      speed,
+      proficiencyBonus,
+      hitDieType,
+      hitDiceUsed,
+      heroicInspiration,
+      deathSaves,
+    };
+    const blob = new Blob([JSON.stringify(characterData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name || "character"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const loadFromJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data: CharacterData = JSON.parse(e.target?.result as string);
+          setStats(data.stats);
+          setSkills(data.skills);
+          setHumanity(data.humanity);
+          setHp(data.hp);
+          setTempHp(data.tempHp);
+          setExhaustion(data.exhaustion);
+          setStatus(data.status);
+          setMoney(data.money);
+          setName(data.name);
+          setRole(data.role);
+          setLevel(data.level);
+          setImage(data.image);
+          setArmor(data.armor);
+          setSpeed(data.speed);
+          setProficiencyBonus(data.proficiencyBonus);
+          setHitDieType(data.hitDieType);
+          setHitDiceUsed(data.hitDiceUsed);
+          setHeroicInspiration(data.heroicInspiration);
+          setDeathSaves(data.deathSaves);
+          setIsDeathSavesActive(parseInt(data.hp.current) === 0);
+        } catch (error) {
+          alert("Помилка завантаження файлу JSON");
+        }
+      };
+      reader.readAsText(file);
+      if (loadFileInputRef.current) loadFileInputRef.current.value = "";
+    }
+  };
+
   const handleStatChange = (key: keyof Stats, value: string) => {
     const intValue = Math.min(30, Math.max(0, parseInt(value) || 0));
-    setStats((prev: Stats) => ({ ...prev, [key]: intValue }));
+    setStats((prev) => ({ ...prev, [key]: intValue }));
   };
 
   const handleLevelChange = (value: string) => {
     const intValue = Math.min(20, Math.max(0, parseInt(value) || 0));
     setLevel(intValue);
-    setHitDiceUsed(prev => Math.min(prev, intValue));
+    setHitDiceUsed((prev) => Math.min(prev, intValue));
   };
 
   const handleArmorChange = (value: string) => {
@@ -324,12 +398,12 @@ const CharacterSheet: React.FC = () => {
 
   const handleHumanityChange = (field: "max" | "current", value: string) => {
     const intValue = parseInt(value) || 0;
-    setHumanity(prev => ({ ...prev, [field]: intValue.toString() }));
+    setHumanity((prev) => ({ ...prev, [field]: intValue.toString() }));
   };
 
   const handleHpChange = (field: "max" | "current", value: string) => {
     const intValue = parseInt(value) || 0;
-    setHp(prev => ({ ...prev, [field]: intValue.toString() }));
+    setHp((prev) => ({ ...prev, [field]: intValue.toString() }));
   };
 
   const handleTempHpChange = (value: string) => {
@@ -407,7 +481,7 @@ const CharacterSheet: React.FC = () => {
   const toggleSkillProficiency = (skillKey: keyof Skills, skillType: SkillType) => {
     if (skillType === "check") return;
     
-    setSkills(prev => {
+    setSkills((prev) => {
       const current = prev[skillKey];
       let next: SkillProficiency | RegularSkillProficiency;
       
@@ -493,9 +567,9 @@ const CharacterSheet: React.FC = () => {
     const maxHp = parseInt(hp.max) || 0;
     const newHp = Math.min(currentHp + totalHealing, maxHp);
 
-    setHp(prev => ({ ...prev, current: newHp.toString() }));
+    setHp((prev) => ({ ...prev, current: newHp.toString() }));
     setTempHp("0");
-    setHitDiceUsed(prev => prev + diceToSpend);
+    setHitDiceUsed((prev) => prev + diceToSpend);
     setHitDiceToSpend("");
     if (newHp > 0) {
       setDeathSaves({ successes: [false, false, false], failures: [false, false, false] });
@@ -504,7 +578,7 @@ const CharacterSheet: React.FC = () => {
   };
 
   const handleLongRest = () => {
-    setHp(prev => ({ ...prev, current: prev.max }));
+    setHp((prev) => ({ ...prev, current: prev.max }));
     setTempHp("0");
     setHitDiceUsed(0);
     setDeathSaves({ successes: [false, false, false], failures: [false, false, false] });
@@ -536,7 +610,7 @@ const CharacterSheet: React.FC = () => {
       }
     }
     
-    setHp(prev => ({ ...prev, current: newHp.toString() }));
+    setHp((prev) => ({ ...prev, current: newHp.toString() }));
     setTempHp(newTempHp.toString());
     setHpChange("");
     if (newHp > 0) {
@@ -571,7 +645,7 @@ const CharacterSheet: React.FC = () => {
   };
 
   const handleDeathSaveChange = (type: 'successes' | 'failures', index: number) => {
-    setDeathSaves(prev => {
+    setDeathSaves((prev) => {
       const newState = {
         ...prev,
         [type]: [...prev[type]]
@@ -607,10 +681,10 @@ const CharacterSheet: React.FC = () => {
                 Короткий відпочинок:
                 <select
                   value={hitDieType}
-                  onChange={e => handleHitDieTypeChange(e.target.value)}
+                  onChange={(e) => handleHitDieTypeChange(e.target.value)}
                   className="hit-die-select"
                 >
-                  {hitDieTypes.map(die => (
+                  {hitDieTypes.map((die) => (
                     <option key={die} value={die}>{die}</option>
                   ))}
                 </select>
@@ -619,8 +693,8 @@ const CharacterSheet: React.FC = () => {
                   min="1"
                   max={level - hitDiceUsed}
                   value={formatValue(hitDiceToSpend)}
-                  onChange={e => handleHitDiceToSpendChange(e.target.value)}
-                  onBlur={e => {
+                  onChange={(e) => handleHitDiceToSpendChange(e.target.value)}
+                  onBlur={(e) => {
                     const newValue = formatValue(e.target.value);
                     handleHitDiceToSpendChange(newValue);
                   }}
@@ -645,6 +719,19 @@ const CharacterSheet: React.FC = () => {
             <DocumentTextIcon className="backpack-icon" />
             Нотатки
           </button>
+          <button onClick={saveToJson} className="backpack-button">
+            Зберегти JSON
+          </button>
+          <button onClick={() => loadFileInputRef.current?.click()} className="backpack-button">
+            Завантажити JSON
+          </button>
+          <input
+            type="file"
+            accept="application/json"
+            onChange={loadFromJson}
+            ref={loadFileInputRef}
+            style={{ display: "none" }}
+          />
         </div>
         <div className="avatar-frame" onClick={handleAvatarClick}>
           <img
@@ -660,7 +747,7 @@ const CharacterSheet: React.FC = () => {
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
-            ref={ref => setFileInput(ref)}
+            ref={(ref) => setFileInput(ref)}
             style={{ display: "none" }}
           />
         </div>
@@ -673,13 +760,13 @@ const CharacterSheet: React.FC = () => {
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
             />
           </label>
           <label style={{ marginLeft: 40 }}>
             Роль:
-            <select value={role} onChange={e => setRole(e.target.value)}>
-              {roles.map(r => (
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              {roles.map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
@@ -691,8 +778,8 @@ const CharacterSheet: React.FC = () => {
               min="0"
               max="20"
               value={formatValue(level.toString())}
-              onChange={e => handleLevelChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleLevelChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleLevelChange(newValue);
               }}
@@ -709,8 +796,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(armor)}
-              onChange={e => handleArmorChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleArmorChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleArmorChange(newValue);
               }}
@@ -722,8 +809,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(speed)}
-              onChange={e => handleSpeedChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleSpeedChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleSpeedChange(newValue);
               }}
@@ -735,8 +822,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(proficiencyBonus.toString())}
-              onChange={e => setProficiencyBonus(parseInt(e.target.value) || 0)}
-              onBlur={e => {
+              onChange={(e) => setProficiencyBonus(parseInt(e.target.value) || 0)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 setProficiencyBonus(parseInt(newValue) || 0);
               }}
@@ -755,8 +842,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(humanity.current)}
-                onChange={e => handleHumanityChange("current", e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleHumanityChange("current", e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleHumanityChange("current", newValue);
                 }}
@@ -766,8 +853,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(humanity.max)}
-                onChange={e => handleHumanityChange("max", e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleHumanityChange("max", e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleHumanityChange("max", newValue);
                 }}
@@ -783,8 +870,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(hp.current)}
-                onChange={e => handleHpChange("current", e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleHpChange("current", e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleHpChange("current", newValue);
                 }}
@@ -794,8 +881,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(hp.max)}
-                onChange={e => handleHpChange("max", e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleHpChange("max", e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleHpChange("max", newValue);
                 }}
@@ -807,8 +894,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(hpChange)}
-              onChange={e => handleHpModificationChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleHpModificationChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleHpModificationChange(newValue);
               }}
@@ -825,7 +912,7 @@ const CharacterSheet: React.FC = () => {
             <div className="death-saves-group">
               <div className="death-saves-successes">
                 <span>Успіхи:</span>
-                {[0, 1, 2].map(index => (
+                {[0, 1, 2].map((index) => (
                   <label key={`success-${index}`} className="death-save-checkbox-label">
                     <input
                       type="checkbox"
@@ -839,7 +926,7 @@ const CharacterSheet: React.FC = () => {
               </div>
               <div className="death-saves-failures">
                 <span>Провали:</span>
-                {[0, 1, 2].map(index => (
+                {[0, 1, 2].map((index) => (
                   <label key={`failure-${index}`} className="death-save-checkbox-label">
                     <input
                       type="checkbox"
@@ -861,8 +948,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(tempHp)}
-                onChange={e => handleTempHpChange(e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleTempHpChange(e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleTempHpChange(newValue);
                 }}
@@ -874,8 +961,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(tempHpChange)}
-              onChange={e => handleTempHpModificationChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleTempHpModificationChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleTempHpModificationChange(newValue);
               }}
@@ -892,8 +979,8 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="number"
                 value={formatValue(money)}
-                onChange={e => handleMoneyChange(e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleMoneyChange(e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleMoneyChange(newValue);
                 }}
@@ -906,8 +993,8 @@ const CharacterSheet: React.FC = () => {
             <input
               type="number"
               value={formatValue(moneyChange)}
-              onChange={e => handleMoneyModificationChange(e.target.value)}
-              onBlur={e => {
+              onChange={(e) => handleMoneyModificationChange(e.target.value)}
+              onBlur={(e) => {
                 const newValue = formatValue(e.target.value);
                 handleMoneyModificationChange(newValue);
               }}
@@ -925,10 +1012,10 @@ const CharacterSheet: React.FC = () => {
               <select
                 ref={statusSelectRef}
                 value={status}
-                onChange={e => handleStatusChange(e.target.value)}
+                onChange={(e) => handleStatusChange(e.target.value)}
                 onFocus={() => setIsStatusDropdownOpen(true)}
               >
-                {statusEffects.map(effect => (
+                {statusEffects.map((effect) => (
                   <option key={effect} value={effect}>{effect}</option>
                 ))}
               </select>
@@ -951,8 +1038,8 @@ const CharacterSheet: React.FC = () => {
           <div className="exhaustion-input">
             <label>
               Виснаження:
-              <select value={exhaustion} onChange={e => handleExhaustionChange(e.target.value)}>
-                {[0, 1, 2, 3, 4, 5, 6].map(level => (
+              <select value={exhaustion} onChange={(e) => handleExhaustionChange(e.target.value)}>
+                {[0, 1, 2, 3, 4, 5, 6].map((level) => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
@@ -964,7 +1051,7 @@ const CharacterSheet: React.FC = () => {
               <input
                 type="checkbox"
                 checked={heroicInspiration}
-                onChange={e => setHeroicInspiration(e.target.checked)}
+                onChange={(e) => setHeroicInspiration(e.target.checked)}
                 className="heroic-inspiration-checkbox"
               />
               <span className="heroic-inspiration-checkbox-custom"></span>
@@ -984,8 +1071,8 @@ const CharacterSheet: React.FC = () => {
                 min="0"
                 max="30"
                 value={formatValue(stats[key].toString())}
-                onChange={e => handleStatChange(key, e.target.value)}
-                onBlur={e => {
+                onChange={(e) => handleStatChange(key, e.target.value)}
+                onBlur={(e) => {
                   const newValue = formatValue(e.target.value);
                   handleStatChange(key, newValue);
                 }}
@@ -1002,11 +1089,11 @@ const CharacterSheet: React.FC = () => {
       <div className="section">
         <h3 className="section-title">Навички</h3>
         <div className="skills-container">
-          {skillGroups.map(group => (
+          {skillGroups.map((group) => (
             <div key={group.ability} className="skill-group">
               <h4 className="skill-group-title">{group.label}</h4>
               <div className="skills-grid">
-                {group.skills.map(skill => (
+                {group.skills.map((skill) => (
                   <div 
                     key={skill.key}
                     onClick={() => toggleSkillProficiency(skill.key, skill.type)}
