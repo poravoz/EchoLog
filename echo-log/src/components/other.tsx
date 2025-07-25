@@ -544,10 +544,10 @@ export const Other = () => {
               Короткий відпочинок
             </button>
             <button className="rest-button long" onClick={handleDownloadJson}>
-              Download JSON
+              Зберегти JSON
             </button>
             <button className="rest-button" onClick={handleUploadJsonClick}>
-              Upload JSON
+              Завантажити JSON
             </button>
             <input
               type="file"
