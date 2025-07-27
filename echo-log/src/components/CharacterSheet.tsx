@@ -457,7 +457,8 @@ const CharacterSheet: React.FC = () => {
   };
 
   const calculatePassivePerception = () => {
-    return stats.reaction;
+    const insightBonus = calculateSkillBonus("reaction", "perception", "skill");
+    return 10 + (parseInt(insightBonus) || 0);
   };
 
   const calculatePassiveInsight = () => {
@@ -1036,7 +1037,9 @@ const CharacterSheet: React.FC = () => {
           <div className="passive-skill">
             <div className="passive-skill-name">Пас. Сприйняття</div>
             <div className="passive-skill-value">{calculatePassivePerception()}</div>
-            <div className="passive-skill-details">Реакція: {stats.reaction}</div>
+            <div className="passive-skill-details">
+                Бонус: {calculateSkillBonus("reaction", "perception", "skill")}
+            </div>
           </div>
           <div className="passive-skill">
             <div className="passive-skill-name">Пас. Проникливість</div>
